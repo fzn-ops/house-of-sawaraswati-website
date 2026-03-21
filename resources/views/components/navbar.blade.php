@@ -17,18 +17,18 @@
                    class="nav-link text-sm font-body font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors duration-200 {{ request()->routeIs('home') ? 'text-rose-600' : '' }}">
                     Beranda
                 </a>
-                <a href="{{ route('hijab.index') }}"
+                <a href="{{ url('/') }}#tentang_kami_home"
                    class="nav-link text-sm font-body font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors duration-200 {{ request()->routeIs('hijab.*') ? 'text-rose-600' : '' }}">
-                    Hijab
+                    Tentang Kami
                 </a>
-                <a href="{{ route('gamis.index') }}"
-                   class="nav-link text-sm font-body font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors duration-200 {{ request()->routeIs('gamis.*') ? 'text-rose-600' : '' }}">
-                    Gamis
+                <a href="{{ route('katalog') }}"
+                   class="nav-link text-sm font-body font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors duration-200 {{ request()->routeIs('katalog') ? 'text-rose-600' : '' }}">
+                    Katalog
                 </a>
-                <a href="{{ route('aksesoris.index') }}"
+                {{--  <a href="{{ route('aksesoris.index') }}"
                    class="nav-link text-sm font-body font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors duration-200 {{ request()->routeIs('aksesoris.*') ? 'text-rose-600' : '' }}">
-                    Aksesoris
-                </a>
+                    
+                </a>--}}
             </nav>
 
             {{-- CTA + Mobile Toggle --}}
@@ -58,17 +58,13 @@
                class="text-sm font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors py-2 border-b border-rose-50">
                 Beranda
             </a>
-            <a href="{{ route('hijab.index') }}"
+            <a href="{{ url('/') }}#tentang_kami_home"
                class="text-sm font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors py-2 border-b border-rose-50">
-                Hijab
+                Tentang Kami
             </a>
-            <a href="{{ route('gamis.index') }}"
+            <a href="{{ route('katalog') }}"
                class="text-sm font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors py-2 border-b border-rose-50">
-                Gamis
-            </a>
-            <a href="{{ route('aksesoris.index') }}"
-               class="text-sm font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors py-2 border-b border-rose-50">
-                Aksesoris
+                Katalog
             </a>
             <a href="{{ route('contact') }}"
                class="mt-2 text-center px-5 py-2.5 rounded-full bg-rose-600 text-white text-sm font-medium tracking-wide hover:bg-rose-700 transition-colors">

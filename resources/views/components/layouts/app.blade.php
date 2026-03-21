@@ -6,8 +6,8 @@
     <title>{{ $title ?? 'House of Saraswati' }}</title>
     <meta name="description" content="{{ $description ?? 'Koleksi Hijab & Gamis Terbaru - House of Saraswati' }}">
 
-    {{-- Tailwind CSS CDN (ganti dengan vite jika sudah setup) --}}
-    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- <script src="https://cdn.tailwindcss.com"></script>--}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     {{-- Google Fonts --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,6 +82,10 @@
         .delay-200 { animation-delay: 0.2s; opacity: 0; }
         .delay-300 { animation-delay: 0.3s; opacity: 0; }
         .delay-400 { animation-delay: 0.4s; opacity: 0; }
+
+        html {
+            scroll-behavior: smooth;
+        }
     </style>
 
     @stack('styles')

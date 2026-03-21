@@ -8,7 +8,7 @@
             {{-- Heading Kiri --}}
             <div>
                 <h2 class="font-display text-4xl lg:text-5xl font-semibold leading-tight">
-                    Temukan Gaya Modest Anda<br>Bersama Kami
+                    Temukan Gaya Modest Anda Bersama Kami
                 </h2>
             </div>
 
@@ -60,10 +60,10 @@
                 <h4 class="font-semibold text-white text-sm mb-2">Navigasi</h4>
                 <ul class="space-y-1 text-sm text-gray-300">
                     <li><a href="{{ route('home') }}" class="hover:text-white transition-colors underline underline-offset-2">Beranda</a></li>
-                    <li><a href="{{ route('hijab.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Hijab</a></li>
-                    <li><a href="{{ route('gamis.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Gamis</a></li>
-                    <li><a href="{{ route('aksesoris.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Aksesoris</a></li>
-                    <li><a href="{{ route('contact') }}" class="hover:text-white transition-colors underline underline-offset-2">Kontak</a></li>
+                    <li><a href="{{ route('hijab.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Tentang Kami</a></li>
+                    <li><a href="{{ route('gamis.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Katalog</a></li>
+                    {{-- <li><a href="{{ route('aksesoris.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Aksesoris</a></li>
+                    <li><a href="{{ route('contact') }}" class="hover:text-white transition-colors underline underline-offset-2">Kontak</a></li> --}}
                 </ul>
             </div>
 

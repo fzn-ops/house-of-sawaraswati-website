@@ -1,7 +1,6 @@
-{{-- resources/views/pages/home.blade.php --}}
 <x-layouts.app title="House of Saraswati – Koleksi Hijab & Gamis Terbaru">
 
-    {{-- ===================== HERO SECTION ===================== --}}
+    {{-- ===================== HERO SECTION ===================== --}}  
     <section class="relative min-h-[88vh] flex items-center overflow-hidden bg-cream">
         {{-- Background image --}}
         <div class="absolute inset-0 z-0">
@@ -23,7 +22,7 @@
                 <p class="text-gray-600 text-base leading-relaxed mb-8 animate-fade-up delay-100">
                     Temukan hijab dan gamis pilihan dengan desain yang lembut, elegan, dan nyaman untuk menemani setiap langkah Anda.
                 </p>
-                <a href="{{ route('products.index') }}"
+                <a href="#tentang_kami_home"
                    class="animate-fade-up delay-200 inline-flex items-center gap-2 px-7 py-3 rounded-full border border-rose-400 text-rose-600 text-sm font-medium tracking-wide hover:bg-rose-600 hover:text-white transition-all duration-300 group">
                     Mulai Jelajahi
                     <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,7 +34,7 @@
     </section>
 
     {{-- ===================== TENTANG KAMI ===================== --}}
-    <section class="py-20 bg-white">
+    <section class="py-20 bg-white" id="tentang_kami_home">
         <div class="max-w-6xl mx-auto px-6 lg:px-8">
             <h2 class="font-display text-3xl font-semibold text-center text-charcoal mb-14 tracking-wide">Tentang Kami</h2>
 
@@ -117,7 +116,7 @@
 
             <div class="mt-12 text-center">
                 <a href="{{ route('products.index') }}"
-                   class="inline-flex items-center px-8 py-3 rounded-full border border-charcoal text-charcoal text-sm font-medium tracking-wide hover:bg-charcoal hover:text-white transition-all duration-200">
+                   class="inline-flex items-center px-8 py-3 rounded-full border border-charcoal text-charcoal text-sm font-medium tracking-wide hover:bg-charcoal hover:text-rose-400 transition-all duration-200">
                     Lihat Semua Produk
                 </a>
             </div>
@@ -127,7 +126,7 @@
     {{-- ===================== MENGAPA HOUSE OF SARASWATI ===================== --}}
     <section class="py-16 bg-white">
         <div class="max-w-5xl mx-auto px-6 lg:px-8">
-            <h2 class="font-body text-base font-semibold text-center text-charcoal mb-10 tracking-wide">Mengapa House of Saraswati</h2>
+            <h2 class="font-body text-3xl font-semibold text-center text-charcoal mb-10 tracking-wide">Mengapa House of Saraswati</h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
 
@@ -138,7 +137,7 @@
                     @endphp
                     @foreach ($features as $feature)
                     <div class="py-5 border-b border-gray-200">
-                        <h3 class="font-display text-2xl font-light text-charcoal">{{ $feature }}</h3>
+                        <h3 class="font-display text-3xl font-light text-charcoal">{{ $feature }}</h3>
                     </div>
                     @endforeach
                 </div>
@@ -163,38 +162,38 @@
         </div>
     </section>
 
-    {{-- ===================== CTA BANNER ===================== --}}
-    <section class="py-10 px-6 lg:px-8">
+      {{-- ===================== CTA BANNER ===================== --}}
+    <section class="py-15 px-6 lg:px-16 mb-20">
         <div class="max-w-5xl mx-auto">
-            <div class="relative bg-[#f5eeea] rounded-2xl overflow-hidden flex items-center min-h-[160px]">
-
+            <div class="relative bg-white rounded-2xl shadow-md flex items-center h-[300px] overflow-visible">
                 {{-- Kiri: Teks + Tombol --}}
-                <div class="flex-1 px-8 py-8 z-10">
-                    <p class="text-base font-body text-charcoal mb-1">
-                        Temukan <span class="font-semibold text-rose-500">koleksi terbaik</span> untuk
+                <div class="flex-1 px-10 py-10 z-10">
+                    <p class="text-2xl font-semibold text-charcoal leading-snug mb-4">
+                        Temukan <span class="text-rose-500">koleksi terbaik</span> untuk<br>
+                        gaya Anda hari ini.
                     </p>
-                    <p class="text-base font-body text-charcoal mb-5">gaya Anda hari ini.</p>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-3">
                         <a href="{{ route('products.index') }}"
-                           class="px-5 py-2 rounded-full border border-gray-400 text-gray-700 text-sm font-medium hover:bg-gray-100 transition-colors">
+                           class="px-6 py-2 rounded-full border border-rose-400 text-rose-400 text-sm font-medium hover:bg-rose-400 hover:text-white transition-colors">
                             Lihat Katalog
                         </a>
                         <a href="{{ route('contact') }}"
-                           class="px-5 py-2 rounded-full bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition-colors">
+                           class="px-6 py-2 rounded-full bg-rose-400 text-white text-sm font-medium hover:bg-rose-500 transition-colors">
                             Hubungi Sekarang
                         </a>
                     </div>
                 </div>
-
-                {{-- Kanan: Gambar overflow ke atas --}}
-                <div class="hidden md:block absolute right-0 top-0 bottom-0 w-72">
+                {{-- Kanan: Gambar dengan gradient putih dari kiri --}}
+                <div class="hidden md:block absolute right-0 top-0 h-full w-1/2 overflow-hidden rounded-r-2xl">
                     <img
-                        src="{{ asset('images/cta-image.jpg') }}"
+                        src="{{ asset('images/cta_image.png') }}"
                         alt="Koleksi Terbaik"
-                        class="w-full h-full object-cover object-left rounded-r-2xl"
+                        class="w-full h-full object-cover object-center"
+                        style="margin-top: -20px; height: calc(100% + 20px);"
                     >
+                    {{-- Gradient putih dari kiri ke transparan --}}
+                    <div class="absolute inset-0" style="background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 40%);"></div>
                 </div>
-
             </div>
         </div>
     </section>
