@@ -62,24 +62,28 @@
 
                 <hr class="border-gray-100 mb-5">
 
-                {{-- Filter: Harga --}}
+                 {{-- Filter: Harga --}}
                 <div class="mb-5">
                     <button class="flex items-center justify-between w-full mb-3" onclick="toggleFilter('harga')">
                         <span class="text-sm font-semibold text-charcoal">Harga</span>
-                        <svg id="icon-harga" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg id="icon-harga" class="w-4 h-4 text-gray-500 transition-transform" fill="none" stroke="currentColor"                  viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                         </svg>
                     </button>
                     <div id="list-harga" class="space-y-2">
                         @php
-                            $harga = ['Di bawah Rp300.000', 'Rp300.000 – Rp500.000', 'Di atas Rp500.000'];
+                            $harga = [
+                                '0-300k'    => 'Di bawah Rp300.000',
+                                '300k-500k' => 'Rp300.000 – Rp500.000',
+                                '500k+'     => 'Di atas Rp500.000',
+                            ];
                         @endphp
-                        @foreach ($harga as $h)
+                        @foreach ($harga as $value => $label)
                         <label class="flex items-center gap-2 cursor-pointer group">
-                            <input type="radio" name="harga" value="{{ $h }}"
+                            <input type="radio" name="harga" value="{{ $value }}"
                                    class="w-3.5 h-3.5 accent-rose-500 cursor-pointer"
                                    onchange="filterProducts()">
-                            <span class="text-sm text-gray-600 group-hover:text-rose-500 transition-colors">{{ $h }}</span>
+                            <span class="text-sm text-gray-600 group-hover:text-rose-500 transition-colors">{{ $label }}</span>
                         </label>
                         @endforeach
                     </div>
@@ -109,7 +113,9 @@
                         @endforeach
                     </div>
                 </div>
-
+                <button onclick="resetFilter()" class="w-full text-xs text-rose-500 hover:text-white mt-4 text-left border border-rose-500 rounded-lg px-3 py-1 transition-colors hover:bg-rose-500">
+                    Reset Filter
+                </button>
             </aside>
 
             {{-- ===== AREA PRODUK ===== --}}
@@ -136,8 +142,8 @@
                     @php
                         // Data dummy — ganti dengan $products dari controller
                         $products = [
-                            ['name' => 'Gamis Set - Coklat',  'price' => 300000, 'kategori' => 'Gamis Set',   'stok' => true,  'image' => 'gamis-coklat.jpg'],
-                            ['name' => 'Gamis Motif - Putih', 'price' => 300000, 'kategori' => 'Gamis Motif', 'stok' => true,  'image' => 'gamis-motif-putih.jpg'],
+                            ['name' => 'Gamis Set - Coklat',  'price' => 500000, 'kategori' => 'Gamis Set',   'stok' => true,  'image' => 'gamis-coklat.jpg'],
+                            ['name' => 'Gamis Motif - Putih', 'price' => 1000000, 'kategori' => 'Gamis Motif', 'stok' => true,  'image' => 'gamis-motif-putih.jpg'],
                             ['name' => 'Gamis Set - Krem',    'price' => 300000, 'kategori' => 'Gamis Set',   'stok' => true,  'image' => 'gamis-krem.jpg'],
                             ['name' => 'Gamis Set - Coklat',  'price' => 300000, 'kategori' => 'Gamis Set',   'stok' => false, 'image' => 'gamis-coklat.jpg'],
                             ['name' => 'Gamis Motif - Putih', 'price' => 300000, 'kategori' => 'Gamis Motif', 'stok' => true,  'image' => 'gamis-motif-putih.jpg'],
