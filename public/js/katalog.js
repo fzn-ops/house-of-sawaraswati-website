@@ -14,21 +14,22 @@ function filterProducts() {
     const harga    = document.querySelector('input[name="harga"]:checked')?.value || '';
     const sort     = document.getElementById('sort-select').value;
 
-    const items = document.querySelectorAll('.product-item');
+    const grid  = document.getElementById('product-grid');
+    const items = Array.from(document.querySelectorAll('.product-item'));
     let visible = 0;
 
     items.forEach(item => {
+        const name  = item.querySelector('h3').textContent.toLowerCase();
         const price = parseInt(item.querySelector('p').textContent.replace(/[^0-9]/g, ''));
-        const name = item.querySelector('h3').textContent.toLowerCase();
+
         const matchSearch   = name.includes(search);
         const matchKategori = !kategori || name.toLowerCase().includes(kategori.split(' ')[1]?.toLowerCase() || '');
         const matchStok     = !stok || stok === 'Semua'
             || (stok === 'Tersedia' && !item.querySelector('.absolute.top-3'))
             || (stok === 'Habis'    &&  item.querySelector('.absolute.top-3'));
-        
         const matchHarga    = !harga
-            || (harga === '0-300k'    && price < 300000)
-            || (harga === '300k-500k' && price >= 300000 && price <= 500000)
+            || (harga === '0-300k'    && price <= 300000)
+            || (harga === '300k-500k' && price > 300000 && price <= 500000)
             || (harga === '500k+'     && price > 500000);
 
         if (matchSearch && matchKategori && matchStok && matchHarga) {
@@ -38,6 +39,24 @@ function filterProducts() {
             item.classList.add('hidden');
         }
     });
+
+    // Sort
+    const visibleItems = items.filter(item => !item.classList.contains('hidden'));
+
+    visibleItems.sort((a, b) => {
+        const nameA  = a.querySelector('h3').textContent.toLowerCase();
+        const nameB  = b.querySelector('h3').textContent.toLowerCase();
+        const priceA = parseInt(a.querySelector('p').textContent.replace(/[^0-9]/g, ''));
+        const priceB = parseInt(b.querySelector('p').textContent.replace(/[^0-9]/g, ''));
+
+        if (sort === 'harga-asc')  return priceA - priceB;
+        if (sort === 'harga-desc') return priceB - priceA;
+        if (sort === 'nama')       return nameA.localeCompare(nameB);
+        return 0; // terbaru = urutan asli
+    });
+
+    // Re-render urutan di DOM
+    visibleItems.forEach(item => grid.appendChild(item));
 
     document.getElementById('empty-state').classList.toggle('hidden', visible > 0);
 }

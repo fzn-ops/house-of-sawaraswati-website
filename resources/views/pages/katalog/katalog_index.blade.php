@@ -125,8 +125,8 @@
                 <div class="flex justify-end mb-6">
                     <div class="relative">
                         <select id="sort-select" onchange="filterProducts()"
-                                class="appearance-none text-sm border border-gray-200 rounded-lg px-4 py-2 pr-8 focus:outline-none focus:border-rose-300 text-gray-600 bg-white cursor-pointer">
-                            <option value="terbaru">terbaru</option>
+                                class="appearance-none text-sm border border-black rounded-lg px-4 py-2 pr-8 focus:outline-none text-gray-600 bg-white cursor-pointer hover:border-rose-400 transition-colors">
+                            <option value="terbaru">Terbaru</option>
                             <option value="harga-asc">harga terendah</option>
                             <option value="harga-desc">harga tertinggi</option>
                             <option value="nama">nama A–Z</option>

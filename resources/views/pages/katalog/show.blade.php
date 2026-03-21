@@ -111,7 +111,7 @@
         </div>
 
         {{-- ===================== PRODUK LAINNYA ===================== --}}
-        <div>
+        <div class="mb-20">
             <h2 class="font-body text-base font-semibold text-charcoal mb-6">Produk Lainnya yang Mungkin Anda Suka</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-5">
                 @php
