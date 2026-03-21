@@ -115,7 +115,7 @@
             </div>
 
             <div class="mt-12 text-center">
-                <a href="{{ route('products.index') }}"
+                <a href="{{ route('katalog') }}"
                    class="inline-flex items-center px-8 py-3 rounded-full border border-charcoal text-charcoal text-sm font-medium tracking-wide hover:bg-charcoal hover:text-rose-400 transition-all duration-200">
                     Lihat Semua Produk
                 </a>
@@ -173,7 +173,7 @@
                         gaya Anda hari ini.
                     </p>
                     <div class="flex flex-wrap gap-3">
-                        <a href="{{ route('products.index') }}"
+                        <a href="{{ route('katalog') }}"
                            class="px-6 py-2 rounded-full border border-rose-400 text-rose-400 text-sm font-medium hover:bg-rose-400 hover:text-white transition-colors">
                             Lihat Katalog
                         </a>

@@ -146,7 +146,7 @@
                     @endphp
 
                     @foreach ($products as $i => $product)
-                    <div class="product-item group cursor-pointer" data-index="{{ $i }}">
+                    <a href="{{ route('katalog.show', Str::slug($product['name'])) }}" class="product-item group block" data-index="{{ $i }}">  
                         {{-- Gambar --}}
                         <div class="relative overflow-hidden rounded-xl bg-gray-50 mb-3">
                             <img
@@ -167,7 +167,7 @@
                             <h3 class="text-sm font-medium text-charcoal group-hover:text-rose-500 transition-colors">{{ $product['name'] }}</h3>
                             <p class="text-sm text-gray-500 mt-0.5">Rp{{ number_format($product['price'], 0, ',', '.') }}</p>
                         </div>
-                    </div>
+                    </a>
                     @endforeach
                 </div>
 

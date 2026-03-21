@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 // Katalog
-Route::get('/produk',      fn () => view('pages.products.index'))->name('products.index');
+Route::get('/katalog/{slug}', fn ($slug) => view('pages.katalog.show', compact('slug')))->name('katalog.show');
 Route::get('/katalog',     fn () => view('pages.katalog.katalog_index'))->name('katalog');
 
 // Beranda / Landing Page
