@@ -72,7 +72,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {{-- Card: Hijab --}}
-                <a href="{{ route('hijab.index') }}" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                <a href="/" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                     <div class="overflow-hidden h-64">
                         <img
                             src="{{ asset('images/hijab_unggulan.png') }}"
@@ -86,7 +86,7 @@
                 </a>
 
                 {{-- Card: Gamis --}}
-                <a href="{{ route('gamis.index') }}" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                <a href="/" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                     <div class="overflow-hidden h-64">
                         <img
                             src="{{ asset('images/collection-gamis.jpg') }}"
@@ -100,7 +100,7 @@
                 </a>
 
                 {{-- Card: Aksesoris --}}
-                <a href="{{ route('aksesoris.index') }}" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                <a href="/" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                     <div class="overflow-hidden h-64">
                         <img
                             src="{{ asset('images/collection-aksesoris.jpg') }}"

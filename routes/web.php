@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AdminAuthController;
+use App\Http\Middleware\AdminMiddleware;
 
 // Katalog
 Route::get('/katalog/{slug}', fn ($slug) => view('pages.katalog.show', compact('slug')))->name('katalog.show');
@@ -12,14 +14,18 @@ Route::get('/', fn () => view('pages.home'))->name('home');
 // Kontak
 Route::get('/kontak', fn () => view('pages.contact'))->name('contact');
 
-// Hijab
-Route::get('/hijab',       fn () => view('pages.hijab.index'))->name('hijab.index');
-Route::get('/hijab/{slug}',fn () => view('pages.hijab.show'))->name('hijab.show');
+// ===== ADMIN ROUTES =====
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/',        [AdminAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login',  [AdminAuthController::class, 'login'])->name('login.post');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
  
-// Gamis
-Route::get('/gamis',       fn () => view('pages.gamis.index'))->name('gamis.index');
-Route::get('/gamis/{slug}',fn () => view('pages.gamis.show'))->name('gamis.show');
+    // Protected routes (perlu login)
+    Route::middleware('admin')->group(function () {
+        Route::get('/dashboard', fn () => view('admin.dashboard'))->name('dashboard');
+        Route::get('/pesanan',   fn () => view('admin.pesanan'))->name('pesanan');
+        Route::get('/produk',    fn () => view('admin.produk'))->name('produk');
+        Route::get('/penjualan', fn () => view('admin.penjualan'))->name('penjualan');
+    });
+});
  
-// Aksesoris
-Route::get('/aksesoris',        fn () => view('pages.aksesoris.index'))->name('aksesoris.index');
-Route::get('/aksesoris/{slug}', fn () => view('pages.aksesoris.show'))->name('aksesoris.show');

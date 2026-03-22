@@ -60,8 +60,8 @@
                 <h4 class="font-semibold text-white text-sm mb-2">Navigasi</h4>
                 <ul class="space-y-1 text-sm text-gray-300">
                     <li><a href="{{ route('home') }}" class="hover:text-white transition-colors underline underline-offset-2">Beranda</a></li>
-                    <li><a href="{{ route('hijab.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Tentang Kami</a></li>
-                    <li><a href="{{ route('gamis.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Katalog</a></li>
+                    <li><a href="{{ url('/') }}#tentang_kami_home" class="hover:text-white transition-colors underline underline-offset-2">Tentang Kami</a></li>
+                    <li><a href="{{ route('katalog') }}" class="hover:text-white transition-colors underline underline-offset-2">Katalog</a></li>
                     {{-- <li><a href="{{ route('aksesoris.index') }}" class="hover:text-white transition-colors underline underline-offset-2">Aksesoris</a></li>
                     <li><a href="{{ route('contact') }}" class="hover:text-white transition-colors underline underline-offset-2">Kontak</a></li> --}}
                 </ul>
