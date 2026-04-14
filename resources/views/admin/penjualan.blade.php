@@ -197,6 +197,9 @@
     </div>
 
     @push('scripts')
+    <script>
+        window.REAL_DATA = @json($mappedData);
+    </script>
     <script src="{{ asset('js/admin_penjualan.js') }}"></script>
     @endpush
 

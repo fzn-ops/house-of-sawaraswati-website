@@ -266,32 +266,65 @@ function tambahkanPesanan() {
         return;
     }
 
-    // Reset order items
-    orderItems = {};
+    // Format data untuk backend
+    const payload = {
+        payment_method: selectedPayment,
+        items: items.map(i => ({
+            product_id: i.id,
+            quantity: i.qty
+        }))
+    };
 
-    // Reset semua tombol card ke kondisi awal
-    document.querySelectorAll('[id^="action-"]').forEach(el => {
-        const id = parseInt(el.id.replace('action-', ''));
-        resetActionButton(id);
+    fetch('/admin/transaksi', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(async response => {
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error('Gagal menyimpan pesanan: ' + err);
+        }
+        return response; // Success (redirect or OK)
+    })
+    .then(() => {
+        // Reset order items
+        orderItems = {};
+
+        // Reset semua tombol card ke kondisi awal
+        document.querySelectorAll('[id^="action-"]').forEach(el => {
+            const id = parseInt(el.id.replace('action-', ''));
+            resetActionButton(id);
+        });
+
+        // Reset metode pembayaran
+        selectedPayment = '';
+        document.querySelectorAll('.payment-btn').forEach(b => {
+            b.classList.remove('border-rose-500', 'bg-rose-50');
+            b.classList.add('border-gray-200');
+            b.querySelector('svg').classList.remove('text-rose-500');
+            b.querySelector('svg').classList.add('text-gray-400');
+            b.querySelector('span').classList.remove('text-rose-500');
+            b.querySelector('span').classList.add('text-gray-600');
+        });
+        document.getElementById('selected-payment-label')?.classList.add('hidden');
+
+        // Reset ringkasan
+        renderOrderSummary();
+
+        // Tampilkan toast sukses
+        showToast('Pesanan berhasil dibuat!', 'success');
+        
+        // Refresh page after a delay to update stocks visually
+        setTimeout(() => window.location.reload(), 1500);
+    })
+    .catch(error => {
+        console.error(error);
+        showToast('Gagal memproses pesanan!', 'error');
     });
-
-    // Reset metode pembayaran
-    selectedPayment = '';
-    document.querySelectorAll('.payment-btn').forEach(b => {
-        b.classList.remove('border-rose-500', 'bg-rose-50');
-        b.classList.add('border-gray-200');
-        b.querySelector('svg').classList.remove('text-rose-500');
-        b.querySelector('svg').classList.add('text-gray-400');
-        b.querySelector('span').classList.remove('text-rose-500');
-        b.querySelector('span').classList.add('text-gray-600');
-    });
-    document.getElementById('selected-payment-label')?.classList.add('hidden');
-
-    // Reset ringkasan
-    renderOrderSummary();
-
-    // Tampilkan toast sukses
-    showToast('Pesanan berhasil dibuat!', 'success');
 }
 
 // ===== METODE PEMBAYARAN =====

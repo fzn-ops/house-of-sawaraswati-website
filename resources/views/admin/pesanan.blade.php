@@ -31,47 +31,34 @@
 
             {{-- Product Grid --}}
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="admin-product-grid">
-                @php
-                    $products = [
-                        ['id'=>1,  'name'=>'Aldera Set - Khmar',  'price'=>300000, 'kategori'=>'Gamis',     'image'=>'gamis-coklat.jpg',       'variants'=>[['ukuran'=>'Size 1','stok'=>10],['ukuran'=>'Size 2','stok'=>5]]],
-                        ['id'=>2,  'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Gamis',     'image'=>'gamis-motif-putih.jpg',   'variants'=>[['ukuran'=>'S','stok'=>8],['ukuran'=>'M','stok'=>12],['ukuran'=>'L','stok'=>3]]],
-                        ['id'=>3,  'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Gamis',     'image'=>'gamis-krem.jpg',          'variants'=>[['ukuran'=>'Size 1','stok'=>6],['ukuran'=>'Size 2','stok'=>4]]],
-                        ['id'=>4,  'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Hijab',     'image'=>'gamis-coklat.jpg',        'variants'=>[['ukuran'=>'All Size','stok'=>20]]],
-                        ['id'=>5,  'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Gamis',     'image'=>'gamis-motif-putih.jpg',   'variants'=>[['ukuran'=>'S','stok'=>5],['ukuran'=>'M','stok'=>7]]],
-                        ['id'=>6,  'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Gamis',     'image'=>'gamis-krem.jpg',          'variants'=>[['ukuran'=>'Size 1','stok'=>9],['ukuran'=>'Size 2','stok'=>2]]],
-                        ['id'=>7,  'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Aksesoris', 'image'=>'gamis-coklat.jpg',        'variants'=>[['ukuran'=>'Free Size','stok'=>15]]],
-                        ['id'=>8,  'name'=>'Aldera Set - Coklat', 'price'=>250000, 'kategori'=>'Gamis',     'image'=>'gamis-motif-putih.jpg',   'variants'=>[['ukuran'=>'Size 1','stok'=>4],['ukuran'=>'Size 2','stok'=>6]]],
-                        ['id'=>9,  'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Gamis',     'image'=>'gamis-krem.jpg',          'variants'=>[['ukuran'=>'M','stok'=>11],['ukuran'=>'L','stok'=>3],['ukuran'=>'XL','stok'=>1]]],
-                        ['id'=>10, 'name'=>'Aldera Set - Hitam',  'price'=>150000, 'kategori'=>'Hijab',     'image'=>'gamis-coklat.jpg',        'variants'=>[['ukuran'=>'All Size','stok'=>18]]],
-                        ['id'=>11, 'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Gamis',     'image'=>'gamis-motif-putih.jpg',   'variants'=>[['ukuran'=>'Size 1','stok'=>7],['ukuran'=>'Size 2','stok'=>5]]],
-                        ['id'=>12, 'name'=>'Alcy Set - Khmar',    'price'=>200000, 'kategori'=>'Gamis',     'image'=>'gamis-krem.jpg',          'variants'=>[['ukuran'=>'S','stok'=>4],['ukuran'=>'M','stok'=>8]]],
-                    ];
-                @endphp
-
                 @foreach ($products as $product)
+                @php
+                    $variants = [['ukuran' => 'All Size', 'stok' => $product->stok]];
+                    $imagePath = $product->image ? asset('storage/' . $product->image) : asset('images/hero_image.png');
+                @endphp
                 <div class="admin-product-card relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:border-rose-200 transition-all duration-200"
-                     data-id="{{ $product['id'] }}"
-                     data-name="{{ $product['name'] }}"
-                     data-price="{{ $product['price'] }}"
-                     data-kategori="{{ $product['kategori'] }}"
-                     data-image="{{ asset('images/products/' . $product['image']) }}"
-                     data-variants='{{ json_encode($product['variants']) }}'>
+                     data-id="{{ $product->product_id }}"
+                     data-name="{{ $product->name }}"
+                     data-price="{{ $product->price }}"
+                     data-kategori="Umum"
+                     data-image="{{ $imagePath }}"
+                     data-variants='{{ json_encode($variants) }}'>
 
                     {{-- Gambar --}}
-                    <div class="bg-gray-50 overflow-hidden">
-                        <img src="{{ asset('images/products/' . $product['image']) }}"
-                             alt="{{ $product['name'] }}"
-                             class="w-full aspect-square object-cover hover:scale-105 transition-transform duration-300">
+                    <div class="bg-gray-50 overflow-hidden flex items-center justify-center p-0 aspect-square">
+                        <img src="{{ $imagePath }}"
+                             alt="{{ $product->name }}"
+                             class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
                     </div>
 
                     {{-- Info --}}
                     <div class="p-3">
-                        <p class="text-sm font-medium text-charcoal truncate">{{ $product['name'] }}</p>
-                        <p class="text-xs text-gray-500 mt-0.5">Rp{{ number_format($product['price'], 0, ',', '.') }}</p>
+                        <p class="text-sm font-medium text-charcoal truncate">{{ $product->name }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Rp{{ number_format($product->price, 0, ',', '.') }}</p>
 
                         {{-- Tombol / Counter --}}
-                        <div class="mt-2.5" id="action-{{ $product['id'] }}">
-                            <button onclick="showSizePopup({{ $product['id'] }})"
+                        <div class="mt-2.5" id="action-{{ $product->product_id }}">
+                            <button onclick="showSizePopup({{ $product->product_id }})"
                                     class="pilih-btn w-full flex items-center justify-between px-3 py-1.5 rounded-full border border-gray-200 text-xs text-gray-500 hover:border-rose-400 hover:text-rose-500 transition-all duration-200">
                                 Pilih Produk
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,13 +68,13 @@
                         </div>
 
                         {{-- Size Popup (muncul di dalam card) --}}
-                        <div id="size-popup-{{ $product['id'] }}"
+                        <div id="size-popup-{{ $product->product_id }}"
                              class="hidden absolute inset-0 bg-white/95 backdrop-blur-sm rounded-2xl z-10 flex flex-col justify-center p-4">
-                            <p class="text-xs font-semibold text-charcoal mb-2 truncate">{{ $product['name'] }}</p>
+                            <p class="text-xs font-semibold text-charcoal mb-2 truncate">{{ $product->name }}</p>
                             <p class="text-xs text-gray-400 mb-3">Pilih Ukuran:</p>
                             <div class="flex flex-wrap gap-1.5 mb-3">
-                                @foreach ($product['variants'] as $v)
-                                <button onclick="selectSize({{ $product['id'] }}, '{{ $v['ukuran'] }}', {{ $v['stok'] }})"
+                                @foreach ($variants as $v)
+                                <button onclick="selectSize({{ $product->product_id }}, '{{ $v['ukuran'] }}', {{ $v['stok'] }})"
                                         class="size-option px-3 py-1 text-xs border border-gray-200 rounded-lg hover:border-rose-400 hover:text-rose-500 hover:bg-rose-50 transition-all
                                         {{ $v['stok'] == 0 ? 'opacity-40 cursor-not-allowed line-through' : '' }}"
                                         {{ $v['stok'] == 0 ? 'disabled' : '' }}
@@ -98,7 +85,7 @@
                                 </button>
                                 @endforeach
                             </div>
-                            <button onclick="hideSizePopup({{ $product['id'] }})"
+                            <button onclick="hideSizePopup({{ $product->product_id }})"
                                     class="text-xs text-gray-400 hover:text-gray-600 transition-colors text-center">
                                 Batal
                             </button>

@@ -1,34 +1,7 @@
 // public/js/admin-penjualan.js
 
 // ===== DATA =====
-const DUMMY_DATA = Array.from({ length: 50 }, (_, i) => ({
-    id:      `#${837623 + i}`,
-    tanggal: '12 Maret 2026',
-    produk:  [
-        [{ nama: 'Alyara Set Khmar', ukuran: 'Size 1', qty: 1 }],
-        [{ nama: 'Alcy Set Khmar',   ukuran: 'Size 2', qty: 2 }],
-        [{ nama: 'Aldera Set Khmar', ukuran: 'M',      qty: 1 }, { nama: 'Hijab Motif', ukuran: 'All Size', qty: 1 }],
-        [{ nama: 'Hijab Motif',      ukuran: 'Free Size', qty: 3 }],
-    ][i % 4],
-    total:   [300000, 400000, 450000, 150000][i % 4],
-    metode:  ['Transfer', 'Tunai / COD', 'QRIS', 'E-Wallet'][i % 4],
-}));
-
-// Baca dari localStorage (pesanan dari halaman pesanan)
-function loadFromStorage() {
-    try {
-        const saved = JSON.parse(localStorage.getItem('penjualan_data') || '[]');
-        return saved.map(p => ({
-            id:      p.id,
-            tanggal: p.tanggal,
-            produk:  p.produk, // array of { nama, ukuran, qty }
-            total:   p.total,
-            metode:  p.metode,
-        }));
-    } catch { return []; }
-}
-
-let allData      = [...loadFromStorage(), ...DUMMY_DATA];
+let allData      = window.REAL_DATA || [];
 let filteredData = [...allData];
 const PER_PAGE   = 10;
 let currentPage  = 1;

@@ -16,10 +16,8 @@ class TransactionController extends Controller
     // getTransaksi() : Transaction (tampilkan semua transaksi)
     public function index()
     {
-        $transactions = Transaction::with(['user', 'transactionDetails.product'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-        return view('admin.pesanan', compact('transactions'));
+        $products = Product::where('stok', '>', 0)->get();
+        return view('admin.pesanan', compact('products'));
     }
 
     // buatTransaksi() : void (form kasir)
@@ -33,6 +31,7 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'payment_method'     => 'nullable|string',
             'items'              => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,product_id',
             'items.*.quantity'   => 'required|integer|min:1',
@@ -45,6 +44,7 @@ class TransactionController extends Controller
                 'transaction_date' => Carbon::now(),
                 'total_price'      => 0,
                 'user_id'          => Auth::id(),
+                'payment_method'   => $request->input('payment_method', 'Tunai / COD'),
             ]);
 
             $totalPrice = 0;
@@ -79,10 +79,22 @@ class TransactionController extends Controller
 
             DB::commit();
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi berhasil disimpan. Total: Rp ' . number_format($totalPrice, 0, ',', '.')
+                ]);
+            }
+
             return redirect()->route('admin.pesanan')
                 ->with('success', 'Transaksi berhasil disimpan. Total: Rp ' . number_format($totalPrice, 0, ',', '.'));
         } catch (\Exception $e) {
             DB::rollBack();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'error' => $e->getMessage()], 400);
+            }
+
             return back()->with('error', $e->getMessage())->withInput();
         }
     }
@@ -94,19 +106,38 @@ class TransactionController extends Controller
         return response()->json($transaction);
     }
 
-    // getLaporanHarian() : list
     public function laporanHarian(Request $request)
     {
-        $date = $request->get('date', Carbon::today()->toDateString());
+        $query = Transaction::with(['user', 'transactionDetails.product'])
+            ->orderBy('transaction_date', 'desc');
 
-        $transactions = Transaction::with(['user', 'transactionDetails.product'])
-            ->whereDate('transaction_date', $date)
-            ->orderBy('transaction_date', 'desc')
-            ->get();
+        if ($request->has('date') && $request->get('date') != '') {
+            $query->whereDate('transaction_date', $request->get('date'));
+        }
+
+        $transactions = $query->get();
+
+        // Format data untuk JSON Javascript frontend
+        $mappedData = $transactions->map(function ($tr) {
+            return [
+                'id'      => 'TRX-' . $tr->transaction_id,
+                'tanggal' => Carbon::parse($tr->transaction_date)->translatedFormat('d F Y H:i'),
+                'produk'  => $tr->transactionDetails->map(function ($detail) {
+                    return [
+                        'nama'   => $detail->product ? $detail->product->name : 'Produk Terhapus',
+                        'ukuran' => 'All Size',
+                        'qty'    => $detail->quantity
+                    ];
+                })->toArray(),
+                'total'   => $tr->total_price,
+                'metode'  => self::formatPaymentMethod($tr->payment_method)
+            ];
+        });
 
         $totalHarian = $transactions->sum('total_price');
+        $date = $request->get('date', '');
 
-        return view('admin.penjualan', compact('transactions', 'totalHarian', 'date'));
+        return view('admin.penjualan', compact('mappedData', 'totalHarian', 'date'));
     }
 
     // getLaporanBulanan() : list
@@ -129,5 +160,15 @@ class TransactionController extends Controller
             'bulan'         => $month,
             'tahun'         => $year,
         ]);
+    }
+
+    private static function formatPaymentMethod($method) {
+        $map = [
+            'transfer' => 'Transfer',
+            'cod'      => 'Tunai / COD',
+            'qris'     => 'QRIS',
+            'ewallet'  => 'E-Wallet',
+        ];
+        return $map[$method] ?? ($method ?: 'Tunai / COD');
     }
 }
