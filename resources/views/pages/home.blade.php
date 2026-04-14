@@ -51,10 +51,11 @@
                 {{-- Text --}}
                 <div>
                     <p class="text-gray-600 leading-relaxed mb-4">
-                        House of Saraswati merupakan UMKM fashion muslimah yang menghadirkan koleksi hijab dan gamis dengan desain elegan serta material berkualitas. Kami percaya bahwa setiap perempuan berhak tampil anggun dan percaya diri dalam setiap kesempatan.
+                        {{ $profile->about ?? 'House of Saraswati merupakan UMKM fashion muslimah yang menghadirkan koleksi hijab dan gamis dengan desain elegan serta material berkualitas.' }}
                     </p>
                     <p class="text-gray-600 leading-relaxed mb-8">
-                        Dengan komitmen pada kualitas dan detail, setiap produk kami dipilih dan dikemas dengan penuh perhatian. House of Saraswati berlokasi di Jakarta dan terus berkembang untuk menjangkau lebih banyak pelanggan melalui platform digital.
+                        Visi kami: {{ $profile->vision ?? 'Menjadi pilihan utama pakaian muslimah.' }} <br>
+                        Misi kami: {{ $profile->mission ?? 'Memberikan produk berkualitas dengan harga terjangkau.' }}
                     </p>
                     <a href="{{ route('contact') }}"
                        class="inline-flex items-center px-6 py-2.5 rounded-full border border-rose-400 text-rose-600 text-sm font-medium hover:bg-rose-600 hover:text-white transition-all duration-200">
@@ -71,47 +72,27 @@
             <h2 class="font-display text-3xl font-semibold text-center text-charcoal mb-14 tracking-wide">Koleksi Unggulan</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                {{-- Card: Hijab --}}
-                <a href="/" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <div class="overflow-hidden h-64">
+                @forelse ($featuredProducts as $item)
+                {{-- Card Produk --}}
+                <a href="{{ route('katalog.show', $item->product_id) }}" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <div class="overflow-hidden h-64 bg-gray-50 aspect-square flex items-center justify-center">
+                        @if($item->image)
                         <img
-                            src="{{ asset('images/hijab_unggulan.png') }}"
-                            alt="Koleksi Hijab"
-                            class="w-full h-full object-cover"
+                            src="{{ asset('storage/' . $item->image) }}"
+                            alt="{{ $item->name }}"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         >
+                        @else
+                        <span class="text-gray-300">No Image</span>
+                        @endif
                     </div>
                     <div class="p-4 text-center">
-                        <span class="text-sm font-medium tracking-widest uppercase text-charcoal group-hover:text-rose-600 transition-colors">Hijab</span>
+                        <span class="text-sm font-medium tracking-widest text-charcoal group-hover:text-rose-600 transition-colors">{{ $item->name }}</span>
                     </div>
                 </a>
-
-                {{-- Card: Gamis --}}
-                <a href="/" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <div class="overflow-hidden h-64">
-                        <img
-                            src="{{ asset('images/collection-gamis.jpg') }}"
-                            alt="Koleksi Gamis"
-                            class="w-full h-full object-cover"
-                        >
-                    </div>
-                    <div class="p-4 text-center">
-                        <span class="text-sm font-medium tracking-widest uppercase text-charcoal group-hover:text-rose-600 transition-colors">Gamis</span>
-                    </div>
-                </a>
-
-                {{-- Card: Aksesoris --}}
-                <a href="/" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <div class="overflow-hidden h-64">
-                        <img
-                            src="{{ asset('images/collection-aksesoris.jpg') }}"
-                            alt="Koleksi Aksesoris"
-                            class="w-full h-full object-cover"
-                        >
-                    </div>
-                    <div class="p-4 text-center">
-                        <span class="text-sm font-medium tracking-widest uppercase text-charcoal group-hover:text-rose-600 transition-colors">Aksesoris</span>
-                    </div>
-                </a>
+                @empty
+                <p class="text-center text-gray-400 col-span-3">Belum ada koleksi unggulan.</p>
+                @endforelse
             </div>
 
             <div class="mt-12 text-center">

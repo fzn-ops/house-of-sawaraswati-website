@@ -11,14 +11,13 @@ class AdminAuthController extends Controller
     // Tampilkan halaman login
     public function showLogin()
     {
-        // Kalau sudah login, langsung ke dashboard
-        if (session('admin_logged_in')) {
+        if (Auth::check()) {
             return redirect()->route('admin.dashboard');
         }
         return view('admin.login');
     }
 
-    // Proses login
+    // login() : boolean
     public function login(Request $request)
     {
         $request->validate([
@@ -26,21 +25,22 @@ class AdminAuthController extends Controller
             'password' => 'required',
         ]);
 
-        $adminEmail    = config('admin.email',    'admin@saraswati.com');
-        $adminPassword = config('admin.password', 'admin123');
+        $credentials = $request->only('email', 'password');
 
-        if ($request->email === $adminEmail && $request->password === $adminPassword) {
-            session(['admin_logged_in' => true, 'admin_email' => $request->email]);
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
             return redirect()->route('admin.dashboard');
         }
 
         return back()->with('error', 'Email atau password salah.')->withInput();
     }
 
-    // Logout
-    public function logout()
+    // logout() : void
+    public function logout(Request $request)
     {
-        session()->forget(['admin_logged_in', 'admin_email']);
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect()->route('admin.login');
     }
 }

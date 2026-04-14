@@ -134,7 +134,7 @@
                     <div class="relative">
                         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">Rp</span>
                         <input type="number" id="t-total" placeholder="0"
-                               class="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-rose-400 transition-colors">
+                               class="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 border border-gray-300 shadow-inner rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-colors">
                     </div>
                 </div>
 
@@ -145,7 +145,7 @@
                     </label>
                     <div class="relative">
                         <select id="t-metode"
-                                class="w-full appearance-none px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-rose-400 bg-white pr-8 cursor-pointer">
+                                class="w-full appearance-none px-3 py-2.5 text-sm bg-gray-50 border border-gray-300 shadow-inner rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 bg-white pr-8 cursor-pointer">
                             <option>Transfer</option>
                             <option>Tunai / COD</option>
                             <option>QRIS</option>
@@ -162,7 +162,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1.5">Tanggal</label>
                     <input type="date" id="t-tanggal"
-                           class="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-rose-400 transition-colors">
+                           class="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-300 shadow-inner rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-colors">
                 </div>
             </div>
 

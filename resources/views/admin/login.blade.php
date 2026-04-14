@@ -74,7 +74,7 @@
                         value="{{ old('email') }}"
                         placeholder="admin@saraswati.com"
                         required
-                        class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-rose-400 transition-colors placeholder-gray-300 @error('email') border-rose-400 @enderror"
+                        class="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-300 shadow-inner rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-colors placeholder-gray-300 @error('email') border-rose-400 @enderror"
                     >
                     @error('email')
                     <p class="text-xs text-rose-500 mt-1">{{ $message }}</p>
@@ -91,7 +91,7 @@
                             id="password-input"
                             placeholder="••••••••"
                             required
-                            class="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-rose-400 transition-colors placeholder-gray-300 pr-10 @error('password') border-rose-400 @enderror"
+                            class="w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-300 shadow-inner rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-colors placeholder-gray-300 pr-10 @error('password') border-rose-400 @enderror"
                         >
                         {{-- Toggle show/hide password --}}
                         <button type="button" onclick="togglePassword()"

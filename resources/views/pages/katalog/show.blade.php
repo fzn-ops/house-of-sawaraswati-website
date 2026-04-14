@@ -1,5 +1,5 @@
 {{-- resources/views/pages/katalog/show.blade.php --}}
-<x-layouts.app title="{{ $product['name'] ?? 'Detail Produk' }} – House of Saraswati">
+<x-layouts.app title="{{ $product->name ?? 'Detail Produk' }} – House of Saraswati">
 
     <div class="max-w-5xl mx-auto px-6 lg:px-8 py-12">
 
@@ -7,22 +7,26 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
 
             {{-- Kiri: Gambar --}}
-            <div class="rounded-2xl overflow-hidden bg-gray-50">
+            <div class="rounded-2xl overflow-hidden bg-gray-50 flex items-center justify-center">
+                @if($product->image)
                 <img
-                    src="{{ asset('images/products/' . ($product['image'] ?? 'placeholder.jpg')) }}"
-                    alt="{{ $product['name'] ?? 'Produk' }}"
+                    src="{{ asset('storage/' . $product->image) }}"
+                    alt="{{ $product->name }}"
                     class="w-full h-full object-cover object-top"
                 >
+                @else
+                <span class="text-gray-300">No Image</span>
+                @endif
             </div>
 
             {{-- Kanan: Info Produk --}}
             <div>
                 {{-- Nama & Harga --}}
                 <h1 class="font-display text-3xl font-semibold text-charcoal mb-1">
-                    {{ $product['name'] ?? 'Alyara Set Khimar – Cream Beige' }}
+                    {{ $product->name }}
                 </h1>
                 <p class="text-base text-gray-700 mb-6">
-                    Rp{{ number_format($product['price'] ?? 300000, 0, ',', '.') }}
+                    Rp{{ number_format($product->price, 0, ',', '.') }}
                 </p>
 
                 {{-- Ukuran --}}
@@ -43,14 +47,14 @@
                 {{-- Status --}}
                 <div class="mb-6">
                     <h2 class="font-display text-lg font-semibold text-charcoal mb-1">Status</h2>
-                    <p class="text-sm {{ ($product['stok'] ?? true) ? 'text-gray-700' : 'text-red-500' }}">
-                        {{ ($product['stok'] ?? true) ? 'Tersedia' : 'Habis' }}
+                    <p class="text-sm {{ $product->stok > 0 ? 'text-gray-700' : 'text-red-500' }}">
+                        {{ $product->stok > 0 ? 'Tersedia' : 'Habis' }}
                     </p>
                 </div>
 
                 {{-- Tombol Pesan --}}
                 <a
-                    href="https://wa.me/6281211882222?text=Halo, saya ingin memesan {{ urlencode($product['name'] ?? 'produk ini') }}"
+                    href="https://wa.me/6281211882222?text=Halo, saya ingin memesan {{ urlencode($product->name) }}"
                     target="_blank"
                     class="block w-full text-center py-3 bg-rose-500 text-white text-sm font-medium rounded hover:bg-rose-600 transition-colors mb-8">
                     Pesan via WhatsApp
@@ -59,8 +63,8 @@
                 {{-- Deskripsi Produk --}}
                 <div class="mb-5">
                     <h2 class="font-display text-base font-semibold text-charcoal mb-2">Deskripsi Produk</h2>
-                    <p class="text-sm text-gray-600 leading-relaxed">
-                        {{ $product['description'] ?? 'Alyara Set Khimar hadir dengan siluet anggun dan desain yang lembut, memancarkan kesan elegan dan nyaman dalam setiap balutan. Didesain dengan potongan longgar yang nyaman serta detail renda halus pada bagian bawah khimar dan lengan, menciptakan tampilan feminin yang tetap sederhana dan berkelas. Cocok digunakan untuk kegiatan sehari-hari, kajian, hingga acara formal dengan tampilan yang tetap rapi dan menawan.' }}
+                    <p class="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                        {{ $product->description ?? 'Deskripsi tidak tersedia.' }}
                     </p>
                 </div>
 
@@ -114,27 +118,26 @@
         <div class="mb-20">
             <h2 class="font-body text-base font-semibold text-charcoal mb-6">Produk Lainnya yang Mungkin Anda Suka</h2>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-5">
-                @php
-                    $related = $relatedProducts ?? [
-                        ['name' => 'Alyara Set Khmar - Ungu',      'price' => 300000, 'image' => 'gamis-coklat.jpg'],
-                        ['name' => 'Aldera Set Khmar - Putih',     'price' => 300000, 'image' => 'gamis-motif-putih.jpg'],
-                        ['name' => 'Alcy Set Khmar - Ungu',        'price' => 300000, 'image' => 'gamis-krem.jpg'],
-                        ['name' => 'Alyara Set Khmar - Ungu Muda', 'price' => 300000, 'image' => 'gamis-coklat.jpg'],
-                    ];
-                @endphp
-                @foreach ($related as $item)
-                <a href="#" class="group block">
-                    <div class="rounded-xl overflow-hidden bg-gray-50 mb-2">
+                @foreach ($relatedProducts as $item)
+                <a href="{{ route('katalog.show', $item->product_id) }}" class="group block">
+                    <div class="rounded-xl overflow-hidden bg-gray-50 mb-2 flex items-center justify-center aspect-[3/4]">
+                        @if($item->image)
                         <img
-                            src="{{ asset('images/products/' . $item['image']) }}"
-                            alt="{{ $item['name'] }}"
-                            class="w-full aspect-[3/4] object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                            src="{{ asset('storage/' . $item->image) }}"
+                            alt="{{ $item->name }}"
+                            class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                         >
+                        @else
+                        <span class="text-gray-300">No Image</span>
+                        @endif
                     </div>
-                    <h3 class="text-sm text-charcoal group-hover:text-rose-500 transition-colors leading-snug">{{ $item['name'] }}</h3>
-                    <p class="text-sm text-gray-500 mt-0.5">Rp{{ number_format($item['price'], 0, ',', '.') }}</p>
+                    <h3 class="text-sm text-charcoal group-hover:text-rose-500 transition-colors leading-snug">{{ $item->name }}</h3>
+                    <p class="text-sm text-gray-500 mt-0.5">Rp{{ number_format($item->price, 0, ',', '.') }}</p>
                 </a>
                 @endforeach
+                @if($relatedProducts->isEmpty())
+                <p class="text-sm text-gray-400">Belum ada produk lain.</p>
+                @endif
             </div>
         </div>
 

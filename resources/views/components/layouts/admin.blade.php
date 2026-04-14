@@ -50,7 +50,7 @@
             </a>
             <a href="{{ route('admin.pesanan') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-               {{ request()->routeIs('admin.pesanan') ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal' }}">
+               {{ request()->routeIs('admin.pesanan') || request()->routeIs('admin.transaksi.*') ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
@@ -58,7 +58,7 @@
             </a>
             <a href="{{ route('admin.produk') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-               {{ request()->routeIs('admin.produk') ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal' }}">
+               {{ request()->routeIs('admin.produk*') ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
@@ -66,11 +66,33 @@
             </a>
             <a href="{{ route('admin.penjualan') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
-               {{ request()->routeIs('admin.penjualan') ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal' }}">
+               {{ request()->routeIs('admin.penjualan*') ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal' }}">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                 </svg>
                 Penjualan
+            </a>
+
+            {{-- Divider --}}
+            <div class="border-t border-gray-100 my-2"></div>
+
+            @if(Auth::user()->role === 'admin')
+            <a href="{{ route('admin.users.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
+               {{ request()->routeIs('admin.users.*') ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal' }}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                Users
+            </a>
+            @endif
+            <a href="{{ route('admin.company-profile') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200
+               {{ request()->routeIs('admin.company-profile*') ? 'bg-rose-500 text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-charcoal' }}">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                Profil
             </a>
         </nav>
 
@@ -96,7 +118,8 @@
                         <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
                     </svg>
                 </div>
-                Admin
+                {{ Auth::user()->name ?? 'Admin' }}
+                <span class="text-xs text-gray-400 font-normal">({{ ucfirst(Auth::user()->role ?? 'admin') }})</span>
             </div>
         </header>
 

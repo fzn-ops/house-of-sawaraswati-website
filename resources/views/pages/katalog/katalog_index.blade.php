@@ -139,29 +139,22 @@
 
                 {{-- Grid Produk --}}
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-45 overflow-y-auto max-h-[calc(100vh-12rem)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" id="product-grid">
-                    @php
-                        // Data dummy — ganti dengan $products dari controller
-                        $products = [
-                            ['name' => 'Gamis Set - Coklat',  'price' => 500000, 'kategori' => 'Gamis Set',   'stok' => true,  'image' => 'gamis-coklat.jpg'],
-                            ['name' => 'Gamis Motif - Putih', 'price' => 1000000, 'kategori' => 'Gamis Motif', 'stok' => true,  'image' => 'gamis-motif-putih.jpg'],
-                            ['name' => 'Gamis Set - Krem',    'price' => 300000, 'kategori' => 'Gamis Set',   'stok' => true,  'image' => 'gamis-krem.jpg'],
-                            ['name' => 'Gamis Set - Coklat',  'price' => 300000, 'kategori' => 'Gamis Set',   'stok' => false, 'image' => 'gamis-coklat.jpg'],
-                            ['name' => 'Gamis Motif - Putih', 'price' => 300000, 'kategori' => 'Gamis Motif', 'stok' => true,  'image' => 'gamis-motif-putih.jpg'],
-                            ['name' => 'Gamis Set - Krem',    'price' => 300000, 'kategori' => 'Gamis Set',   'stok' => true,  'image' => 'gamis-krem.jpg'],
-                        ];
-                    @endphp
-
                     @foreach ($products as $i => $product)
-                    <a href="{{ route('katalog.show', Str::slug($product['name'])) }}" class="product-item group block" data-index="{{ $i }}">  
+                    <a href="{{ route('katalog.show', $product->product_id) }}" class="product-item group block" data-index="{{ $i }}">  
                         {{-- Gambar --}}
-                        <div class="relative overflow-hidden rounded-xl bg-gray-50 mb-3">
+                        <div class="relative overflow-hidden rounded-xl bg-gray-50 mb-3 flex items-center justify-center aspect-[3/4]">
+                            @if($product->image)
                             <img
-                                src="{{ asset('images/products/' . $product['image']) }}"
-                                alt="{{ $product['name'] }}"
-                                class="w-full aspect-[3/4] object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                                src="{{ asset('storage/' . $product->image) }}"
+                                alt="{{ $product->name }}"
+                                class="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                             >
+                            @else
+                            <span class="text-gray-300">No Image</span>
+                            @endif
+                            
                             {{-- Badge Habis --}}
-                            @if (!$product['stok'])
+                            @if ($product->stok == 0)
                             <div class="absolute top-3 left-3 bg-gray-800/70 text-white text-xs px-2 py-1 rounded-md">
                                 Habis
                             </div>
@@ -170,8 +163,8 @@
 
                         {{-- Info --}}
                         <div>
-                            <h3 class="text-sm font-medium text-charcoal group-hover:text-rose-500 transition-colors">{{ $product['name'] }}</h3>
-                            <p class="text-sm text-gray-500 mt-0.5">Rp{{ number_format($product['price'], 0, ',', '.') }}</p>
+                            <h3 class="text-sm font-medium text-charcoal group-hover:text-rose-500 transition-colors">{{ $product->name }}</h3>
+                            <p class="text-sm text-gray-500 mt-0.5">Rp{{ number_format($product->price, 0, ',', '.') }}</p>
                         </div>
                     </a>
                     @endforeach
