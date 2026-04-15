@@ -9,6 +9,7 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class TransactionController extends Controller
@@ -39,15 +40,21 @@ class TransactionController extends Controller
 
         DB::beginTransaction();
         try {
+            // Generate unique order_id untuk Midtrans
+            $orderId = 'HOS-' . time() . '-' . rand(1000, 9999);
+
             // Buat transaksi baru
             $transaction = Transaction::create([
+                'order_id'         => $orderId,
                 'transaction_date' => Carbon::now(),
                 'total_price'      => 0,
                 'user_id'          => Auth::id(),
                 'payment_method'   => $request->input('payment_method', 'Tunai / COD'),
+                'payment_status'   => 'pending',
             ]);
 
             $totalPrice = 0;
+            $itemDetails = [];
 
             foreach ($request->items as $item) {
                 $product = Product::findOrFail($item['product_id']);
@@ -72,17 +79,41 @@ class TransactionController extends Controller
 
                 // updateStok() : void — kurangi stok produk
                 $product->decrement('stok', $item['quantity']);
+
+                // Siapkan item detail untuk Midtrans
+                $itemDetails[] = [
+                    'id'       => (string) $product->product_id,
+                    'price'    => (int) $product->price,
+                    'quantity' => (int) $item['quantity'],
+                    'name'     => substr($product->name, 0, 50), // Midtrans limit 50 chars
+                ];
             }
 
             // hitungTotal() : decimal
             $transaction->update(['total_price' => $totalPrice]);
 
+            // ===== MIDTRANS SNAP TOKEN =====
+            $snapToken = null;
+            $paymentMethod = $request->input('payment_method', 'cod');
+
+            // Hanya generate snap token jika metode pembayaran bukan COD/Tunai
+            if ($paymentMethod !== 'cod') {
+                $snapToken = $this->generateSnapToken($transaction, $itemDetails, $totalPrice);
+                $transaction->update(['snap_token' => $snapToken]);
+            } else {
+                // Pembayaran tunai langsung paid
+                $transaction->update(['payment_status' => 'paid']);
+            }
+
             DB::commit();
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Transaksi berhasil disimpan. Total: Rp ' . number_format($totalPrice, 0, ',', '.')
+                    'success'    => true,
+                    'message'    => 'Transaksi berhasil disimpan. Total: Rp ' . number_format($totalPrice, 0, ',', '.'),
+                    'snap_token' => $snapToken,
+                    'order_id'   => $orderId,
+                    'is_cash'    => $paymentMethod === 'cod',
                 ]);
             }
 
@@ -91,12 +122,71 @@ class TransactionController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
+            Log::error('Transaction Error: ' . $e->getMessage());
+
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json(['success' => false, 'error' => $e->getMessage()], 400);
             }
 
             return back()->with('error', $e->getMessage())->withInput();
         }
+    }
+
+    /**
+     * Generate Midtrans Snap Token
+     */
+    private function generateSnapToken(Transaction $transaction, array $itemDetails, int $totalPrice): ?string
+    {
+        // Konfigurasi Midtrans
+        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
+        \Midtrans\Config::$isProduction = config('midtrans.is_production', false);
+        \Midtrans\Config::$isSanitized  = config('midtrans.is_sanitized', true);
+        \Midtrans\Config::$is3ds        = config('midtrans.is_3ds', true);
+
+        $params = [
+            'transaction_details' => [
+                'order_id'     => $transaction->order_id,
+                'gross_amount' => (int) $totalPrice,
+            ],
+            'item_details' => $itemDetails,
+            'customer_details' => [
+                'first_name' => Auth::user()->name ?? 'Customer',
+                'email'      => Auth::user()->email ?? 'customer@houseofsaraswati.com',
+            ],
+        ];
+
+        try {
+            $snapToken = \Midtrans\Snap::getSnapToken($params);
+            Log::info("Snap Token generated for order: {$transaction->order_id}");
+            return $snapToken;
+        } catch (\Exception $e) {
+            Log::error('Midtrans Snap Token Error: ' . $e->getMessage());
+            throw new \Exception('Gagal membuat token pembayaran Midtrans: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Update payment status dari frontend setelah pembayaran Midtrans
+     */
+    public function updatePaymentStatus(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|string',
+            'status'   => 'required|string|in:paid,pending,failed',
+        ]);
+
+        $transaction = Transaction::where('order_id', $request->order_id)->first();
+
+        if (!$transaction) {
+            return response()->json(['success' => false, 'error' => 'Transaksi tidak ditemukan'], 404);
+        }
+
+        $transaction->update(['payment_status' => $request->status]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status pembayaran berhasil diperbarui',
+        ]);
     }
 
     // getTransaksi() : Transaction (detail satu transaksi)
@@ -130,7 +220,8 @@ class TransactionController extends Controller
                     ];
                 })->toArray(),
                 'total'   => $tr->total_price,
-                'metode'  => self::formatPaymentMethod($tr->payment_method)
+                'metode'  => self::formatPaymentMethod($tr->payment_method),
+                'status'  => $tr->payment_status ?? 'paid',
             ];
         });
 

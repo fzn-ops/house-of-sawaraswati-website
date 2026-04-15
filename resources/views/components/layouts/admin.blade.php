@@ -26,6 +26,11 @@
         }
     </script>
     <style>* { font-family: 'Jost', sans-serif; }</style>
+
+    {{-- Midtrans Snap.js --}}
+    @php $midtransClientKey = config('midtrans.client_key'); @endphp
+    <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ $midtransClientKey }}"></script>
+
     @stack('styles')
 </head>
 <body class="bg-[#f7f5f3] text-[#2c2c2c]">

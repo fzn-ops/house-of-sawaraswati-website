@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\CompanyProfileController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\FrontendController;
+use App\Http\Controllers\MidtransController;
 use App\Http\Middleware\AdminMiddleware;
 
 // Katalog
@@ -19,6 +20,9 @@ Route::get('/', [FrontendController::class, 'home'])->name('home');
 
 // Kontak
 Route::get('/kontak', [FrontendController::class, 'contact'])->name('contact');
+
+// ===== MIDTRANS NOTIFICATION (Public - No Auth) =====
+Route::post('/midtrans/notification', [MidtransController::class, 'notification'])->name('midtrans.notification');
 
 // ===== ADMIN ROUTES =====
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -52,6 +56,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/transaksi/create',         [TransactionController::class, 'create'])->name('transaksi.create');
         Route::post('/transaksi',               [TransactionController::class, 'store'])->name('transaksi.store');
         Route::get('/transaksi/{transaction}',  [TransactionController::class, 'show'])->name('transaksi.show');
+        Route::post('/transaksi/update-payment',  [TransactionController::class, 'updatePaymentStatus'])->name('transaksi.updatePayment');
 
         // Laporan Penjualan
         Route::get('/penjualan',                [TransactionController::class, 'laporanHarian'])->name('penjualan');

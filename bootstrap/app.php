@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin'      => \App\Http\Middleware\AdminMiddleware::class,
             'admin.role' => \App\Http\Middleware\AdminRoleMiddleware::class,
         ]);
+
+        // Exclude Midtrans notification from CSRF verification
+        $middleware->validateCsrfTokens(except: [
+            'midtrans/notification',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -279,52 +279,103 @@ function tambahkanPesanan() {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         body: JSON.stringify(payload)
     })
     .then(async response => {
+        const data = await response.json();
         if (!response.ok) {
-            const err = await response.text();
-            throw new Error('Gagal menyimpan pesanan: ' + err);
+            throw new Error(data.error || 'Gagal menyimpan pesanan');
         }
-        return response; // Success (redirect or OK)
+        return data;
     })
-    .then(() => {
-        // Reset order items
-        orderItems = {};
-
-        // Reset semua tombol card ke kondisi awal
-        document.querySelectorAll('[id^="action-"]').forEach(el => {
-            const id = parseInt(el.id.replace('action-', ''));
-            resetActionButton(id);
-        });
-
-        // Reset metode pembayaran
-        selectedPayment = '';
-        document.querySelectorAll('.payment-btn').forEach(b => {
-            b.classList.remove('border-rose-500', 'bg-rose-50');
-            b.classList.add('border-gray-200');
-            b.querySelector('svg').classList.remove('text-rose-500');
-            b.querySelector('svg').classList.add('text-gray-400');
-            b.querySelector('span').classList.remove('text-rose-500');
-            b.querySelector('span').classList.add('text-gray-600');
-        });
-        document.getElementById('selected-payment-label')?.classList.add('hidden');
-
-        // Reset ringkasan
-        renderOrderSummary();
-
-        // Tampilkan toast sukses
-        showToast('Pesanan berhasil dibuat!', 'success');
-        
-        // Refresh page after a delay to update stocks visually
-        setTimeout(() => window.location.reload(), 1500);
+    .then(data => {
+        if (data.is_cash) {
+            // Pembayaran tunai — langsung sukses
+            resetAllOrderState();
+            showToast('Pesanan berhasil dibuat! (Tunai)', 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        } else if (data.snap_token) {
+            // Pembayaran online — buka Midtrans Snap
+            window.snap.pay(data.snap_token, {
+                onSuccess: function(result) {
+                    console.log('Payment Success:', result);
+                    updatePaymentStatus(data.order_id, 'paid');
+                    resetAllOrderState();
+                    showToast('Pembayaran berhasil!', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                },
+                onPending: function(result) {
+                    console.log('Payment Pending:', result);
+                    updatePaymentStatus(data.order_id, 'pending');
+                    resetAllOrderState();
+                    showToast('Menunggu pembayaran...', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                },
+                onError: function(result) {
+                    console.error('Payment Error:', result);
+                    updatePaymentStatus(data.order_id, 'failed');
+                    showToast('Pembayaran gagal!', 'error');
+                },
+                onClose: function() {
+                    console.log('Snap popup closed');
+                    showToast('Pembayaran belum selesai', 'error');
+                }
+            });
+        } else {
+            resetAllOrderState();
+            showToast('Pesanan berhasil dibuat!', 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        }
     })
     .catch(error => {
         console.error(error);
-        showToast('Gagal memproses pesanan!', 'error');
+        showToast(error.message || 'Gagal memproses pesanan!', 'error');
     });
+}
+
+// ===== UPDATE PAYMENT STATUS KE BACKEND =====
+function updatePaymentStatus(orderId, status) {
+    fetch('/admin/transaksi/update-payment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ order_id: orderId, status: status })
+    })
+    .then(res => res.json())
+    .then(data => console.log('Payment status updated:', data))
+    .catch(err => console.error('Failed to update payment status:', err));
+}
+
+// ===== RESET ALL ORDER STATE =====
+function resetAllOrderState() {
+    orderItems = {};
+
+    // Reset semua tombol card ke kondisi awal
+    document.querySelectorAll('[id^="action-"]').forEach(el => {
+        const id = parseInt(el.id.replace('action-', ''));
+        resetActionButton(id);
+    });
+
+    // Reset metode pembayaran
+    selectedPayment = '';
+    document.querySelectorAll('.payment-btn').forEach(b => {
+        b.classList.remove('border-rose-500', 'bg-rose-50');
+        b.classList.add('border-gray-200');
+        b.querySelector('svg').classList.remove('text-rose-500');
+        b.querySelector('svg').classList.add('text-gray-400');
+        b.querySelector('span').classList.remove('text-rose-500');
+        b.querySelector('span').classList.add('text-gray-600');
+    });
+    document.getElementById('selected-payment-label')?.classList.add('hidden');
+
+    // Reset ringkasan
+    renderOrderSummary();
 }
 
 // ===== METODE PEMBAYARAN =====
