@@ -98,7 +98,7 @@ class TransactionController extends Controller
 
             // Hanya generate snap token jika metode pembayaran bukan COD/Tunai
             if ($paymentMethod !== 'cod') {
-                $snapToken = $this->generateSnapToken($transaction, $itemDetails, $totalPrice);
+                $snapToken = $this->generateSnapToken($transaction, $itemDetails, $totalPrice, $paymentMethod);
                 $transaction->update(['snap_token' => $snapToken]);
             } else {
                 // Pembayaran tunai langsung paid
@@ -133,9 +133,9 @@ class TransactionController extends Controller
     }
 
     /**
-     * Generate Midtrans Snap Token
+     * Generate Midtrans Snap Token dengan filter metode pembayaran spesifik.
      */
-    private function generateSnapToken(Transaction $transaction, array $itemDetails, int $totalPrice): ?string
+    private function generateSnapToken(Transaction $transaction, array $itemDetails, int $totalPrice, string $paymentMethod = ''): ?string
     {
         // Konfigurasi Midtrans
         \Midtrans\Config::$serverKey    = config('midtrans.server_key');
@@ -155,14 +155,42 @@ class TransactionController extends Controller
             ],
         ];
 
+        // Filter enabled_payments berdasarkan metode yang dipilih di POS
+        $enabledPayments = $this->getEnabledPayments($paymentMethod);
+        if (!empty($enabledPayments)) {
+            $params['enabled_payments'] = $enabledPayments;
+        }
+
         try {
             $snapToken = \Midtrans\Snap::getSnapToken($params);
-            Log::info("Snap Token generated for order: {$transaction->order_id}");
+            Log::info("Snap Token generated for order: {$transaction->order_id}, method: {$paymentMethod}");
             return $snapToken;
         } catch (\Exception $e) {
             Log::error('Midtrans Snap Token Error: ' . $e->getMessage());
             throw new \Exception('Gagal membuat token pembayaran Midtrans: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Mapping metode pembayaran POS ke enabled_payments Midtrans.
+     * Setiap metode hanya mengaktifkan channel pembayaran yang relevan.
+     *
+     * @see https://docs.midtrans.com/reference/enabled-payments
+     */
+    private function getEnabledPayments(string $method): array
+    {
+        $map = [
+            'transfer' => [
+                'bank_transfer',
+                'bca_va', 'bni_va', 'bri_va', 'permata_va',
+                'echannel',       // Mandiri Bill Payment
+            ],
+            'qris' => [
+                'other_qris',     // QRIS generic
+            ],
+        ];
+
+        return $map[$method] ?? [];
     }
 
     /**
@@ -258,7 +286,7 @@ class TransactionController extends Controller
             'transfer' => 'Transfer',
             'cod'      => 'Tunai / COD',
             'qris'     => 'QRIS',
-            'ewallet'  => 'E-Wallet',
+
         ];
         return $map[$method] ?? ($method ?: 'Tunai / COD');
     }

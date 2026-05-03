@@ -2,23 +2,23 @@
 <x-layouts.admin title="Buat Transaksi">
 
     <div class="mb-6">
-        <a href="{{ route('admin.pesanan') }}" class="text-sm text-gray-500 hover:text-rose-500 transition-colors">← Kembali ke Pesanan</a>
-        <h1 class="text-2xl font-bold text-charcoal mt-2">Buat Transaksi Baru</h1>
+        <a href="{{ route('admin.pesanan') }}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-rose-500 transition-colors">← Kembali ke Pesanan</a>
+        <h1 class="text-2xl font-bold text-charcoal dark:text-gray-100 mt-2">Buat Transaksi Baru</h1>
     </div>
 
     @if(session('error'))
-    <div class="mb-4 px-4 py-3 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-600">
+    <div class="mb-4 px-4 py-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl text-sm text-rose-600 dark:text-rose-400">
         {{ session('error') }}
     </div>
     @endif
 
-    <div class="bg-white rounded-2xl border border-gray-100 p-8 max-w-2xl">
+    <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 p-8 max-w-2xl">
         <form method="POST" action="{{ route('admin.transaksi.store') }}" id="transaksi-form">
             @csrf
 
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-3">
-                    <label class="text-sm font-semibold text-charcoal">Produk <span class="text-rose-400">*</span></label>
+                    <label class="text-sm font-semibold text-charcoal dark:text-gray-100">Produk <span class="text-rose-400">*</span></label>
                     <button type="button" onclick="addItem()"
                             class="text-xs text-rose-500 hover:text-rose-600 font-medium flex items-center gap-1 transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,10 +30,10 @@
 
                 {{-- Header --}}
                 <div class="flex items-center gap-3 mb-2 px-1">
-                    <p class="flex-1 text-xs text-gray-400">Produk</p>
-                    <p class="w-20 text-xs text-gray-400 text-center">Stok</p>
-                    <p class="w-20 text-xs text-gray-400 text-center">Qty</p>
-                    <p class="w-24 text-xs text-gray-400 text-right">Harga</p>
+                    <p class="flex-1 text-xs text-gray-400 dark:text-gray-500">Produk</p>
+                    <p class="w-20 text-xs text-gray-400 dark:text-gray-500 text-center">Stok</p>
+                    <p class="w-20 text-xs text-gray-400 dark:text-gray-500 text-center">Qty</p>
+                    <p class="w-24 text-xs text-gray-400 dark:text-gray-500 text-right">Harga</p>
                     <div class="w-8"></div>
                 </div>
 
@@ -43,16 +43,16 @@
             </div>
 
             {{-- Total Preview --}}
-            <div class="bg-gray-50 rounded-xl p-4 mb-6">
+            <div class="bg-gray-50 dark:bg-[#252528] rounded-xl p-4 mb-6">
                 <div class="flex justify-between items-center">
-                    <span class="text-sm font-semibold text-charcoal">Estimasi Total</span>
+                    <span class="text-sm font-semibold text-charcoal dark:text-gray-100">Estimasi Total</span>
                     <span class="text-lg font-bold text-rose-500" id="total-preview">Rp0</span>
                 </div>
             </div>
 
             <div class="flex gap-3">
                 <a href="{{ route('admin.pesanan') }}"
-                   class="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors text-center">
+                   class="flex-1 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 text-sm font-medium rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center">
                     Batal
                 </a>
                 <button type="submit"
@@ -82,21 +82,21 @@
             row.innerHTML = `
                 <div class="flex-1">
                     <select name="items[${itemIndex}][product_id]" required onchange="updateItemInfo(this, ${itemIndex})"
-                            class="w-full appearance-none px-3 py-2.5 text-sm bg-gray-50 border border-gray-300 shadow-inner rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 bg-white cursor-pointer">
+                            class="w-full appearance-none px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 bg-white dark:bg-[#1e1e21] cursor-pointer">
                         ${options}
                     </select>
                 </div>
                 <div class="w-20 text-center">
-                    <span class="text-sm text-gray-400" id="stok-${itemIndex}">-</span>
+                    <span class="text-sm text-gray-400 dark:text-gray-500" id="stok-${itemIndex}">-</span>
                 </div>
                 <div class="w-20">
                     <input type="number" name="items[${itemIndex}][quantity]" min="1" value="1" required onchange="calcTotal()" oninput="calcTotal()"
-                           class="w-full px-2 py-2.5 text-sm text-center bg-gray-50 border border-gray-300 shadow-inner rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-colors">
+                           class="w-full px-2 py-2.5 text-sm text-center bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 transition-colors">
                 </div>
                 <div class="w-24 text-right">
-                    <span class="text-sm font-medium text-charcoal" id="price-${itemIndex}">Rp0</span>
+                    <span class="text-sm font-medium text-charcoal dark:text-gray-100" id="price-${itemIndex}">Rp0</span>
                 </div>
-                <button type="button" onclick="removeItem(${itemIndex})" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all">
+                <button type="button" onclick="removeItem(${itemIndex})" class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>

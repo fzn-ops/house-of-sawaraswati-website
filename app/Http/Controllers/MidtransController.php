@@ -49,8 +49,7 @@ class MidtransController extends Controller
             'cimb_clicks'      => 'CIMB Clicks',
             'danamon_online'   => 'Danamon Online',
             'qris'             => 'QRIS',
-            'gopay'            => 'GoPay',
-            'shopeepay'        => 'ShopeePay',
+
             'cstore'           => 'Indomaret/Alfamart',
             'akulaku'          => 'Akulaku',
         ];

@@ -2,7 +2,19 @@
 
 let orderItems = {};
 const PAJAK_PERSEN = 0.01;
-const DISKON = 100000;
+
+// ===== KODE DISKON STATIS =====
+const DISCOUNT_CODES = {
+    'DISKON10':  { type: 'percent', value: 10,    label: 'Diskon 10%' },
+    'DISKON20':  { type: 'percent', value: 20,    label: 'Diskon 20%' },
+    'PROMO50':   { type: 'percent', value: 50,    label: 'Diskon 50%' },
+    'HEMAT10K':  { type: 'fixed',   value: 10000, label: 'Potongan Rp10.000' },
+    'HEMAT25K':  { type: 'fixed',   value: 25000, label: 'Potongan Rp25.000' },
+    'HEMAT50K':  { type: 'fixed',   value: 50000, label: 'Potongan Rp50.000' },
+};
+
+let appliedDiscount = null;   // { type, value, label, code }
+let currentSubtotal = 0;      // subtotal terakhir (sebelum pajak/diskon)
 
 // ===== SHOW SIZE POPUP =====
 function showSizePopup(id) {
@@ -61,24 +73,24 @@ function updateActionButton(id) {
     }
 
     container.innerHTML = `
-        <div class="bg-rose-50 rounded-xl px-3 py-2">
+        <div class="bg-rose-50 dark:bg-rose-900/20 rounded-xl px-3 py-2">
             <div class="flex items-center justify-between mb-1.5">
                 <span class="text-xs font-semibold text-rose-500">Dipilih</span>
                 <button onclick="showSizePopup(${id})" class="text-xs text-rose-400 hover:text-rose-600 underline">+ Ukuran</button>
             </div>
             ${items.map(item => `
             <div class="flex items-center justify-between mb-1">
-                <span class="text-xs text-gray-600">${item.ukuran}</span>
+                <span class="text-xs text-gray-600 dark:text-gray-300">${item.ukuran}</span>
                 <div class="flex items-center gap-1.5">
                     <button onclick="decreaseQty('${item.key}')"
-                            class="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-rose-500 transition-colors">
+                            class="w-4 h-4 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-colors">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                         </svg>
                     </button>
-                    <span class="text-xs font-semibold text-charcoal w-4 text-center">${item.qty}</span>
+                    <span class="text-xs font-semibold text-charcoal dark:text-gray-100 w-4 text-center">${item.qty}</span>
                     <button onclick="increaseQty('${item.key}')"
-                            class="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-rose-500 transition-colors">
+                            class="w-4 h-4 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-colors">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
@@ -93,7 +105,7 @@ function resetActionButton(id) {
     if (!container) return;
     container.innerHTML = `
         <button onclick="showSizePopup(${id})"
-                class="pilih-btn w-full flex items-center justify-between px-3 py-1.5 rounded-full border border-gray-200 text-xs text-gray-500 hover:border-rose-400 hover:text-rose-500 transition-all duration-200">
+                class="pilih-btn w-full flex items-center justify-between px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 hover:border-rose-400 dark:hover:border-rose-500 hover:text-rose-500 transition-all duration-200">
             Pilih Produk
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -147,7 +159,7 @@ function renderOrderSummary() {
     totalLabel.textContent = `Total Produk (${totalQty})`;
 
     if (items.length === 0) {
-        container.innerHTML = '<p class="text-xs text-gray-400 text-center py-4">Belum ada produk dipilih</p>';
+        container.innerHTML = '<p class="text-xs text-gray-400 dark:text-gray-500 text-center py-4">Belum ada produk dipilih</p>';
         updatePayment(0);
         return;
     }
@@ -156,8 +168,8 @@ function renderOrderSummary() {
         <div class="flex items-center gap-3">
             <img src="${item.image}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" alt="${item.name}">
             <div class="flex-1 min-w-0">
-                <p class="text-xs font-medium text-charcoal truncate">${item.name}</p>
-                <p class="text-xs text-gray-400">${item.ukuran} · (Rp${formatRp(item.price)}) x ${item.qty}</p>
+                <p class="text-xs font-medium text-charcoal dark:text-gray-100 truncate">${item.name}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500">${item.ukuran} · (Rp${formatRp(item.price)}) x ${item.qty}</p>
             </div>
             <button onclick="removeItem('${item.key}')" class="flex-shrink-0 text-rose-400 hover:text-rose-600 transition-colors">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,14 +183,168 @@ function renderOrderSummary() {
 }
 
 function updatePayment(subtotal) {
-    const pajak  = subtotal > 0 ? Math.round(subtotal * PAJAK_PERSEN) : 0;
-    const diskon = subtotal > 0 ? DISKON : 0;
-    const total  = subtotal + pajak - diskon;
+    currentSubtotal = subtotal;
+
+    const pajak = subtotal > 0 ? Math.round(subtotal * PAJAK_PERSEN) : 0;
+
+    // Hitung diskon berdasarkan kode yang diterapkan
+    let diskon = 0;
+    if (appliedDiscount && subtotal > 0) {
+        if (appliedDiscount.type === 'percent') {
+            diskon = Math.round(subtotal * appliedDiscount.value / 100);
+        } else {
+            diskon = appliedDiscount.value;
+        }
+    }
+
+    const total = Math.max(0, subtotal + pajak - diskon);
 
     document.getElementById('subtotal').textContent    = 'Rp' + formatRp(subtotal);
     document.getElementById('pajak').textContent       = 'Rp' + formatRp(pajak);
-    document.getElementById('diskon').textContent      = 'Rp' + formatRp(diskon);
-    document.getElementById('total-bayar').textContent = 'Rp.' + formatRp(Math.max(0, total));
+    document.getElementById('diskon').textContent      = diskon > 0 ? '- Rp' + formatRp(diskon) : 'Rp0';
+    document.getElementById('total-bayar').textContent = 'Rp' + formatRp(total);
+
+    // Update kembalian jika metode tunai aktif
+    updateKembalian();
+}
+
+// ===== KODE DISKON =====
+function applyDiscountCode() {
+    const input    = document.getElementById('discount-code-input');
+    const feedback = document.getElementById('discount-feedback');
+    const code     = (input.value || '').trim().toUpperCase();
+
+    if (!code) {
+        clearDiscount();
+        feedback.textContent = '';
+        feedback.className   = 'text-xs mt-1.5 hidden';
+        return;
+    }
+
+    const disc = DISCOUNT_CODES[code];
+    if (disc) {
+        appliedDiscount = { ...disc, code };
+        feedback.textContent = '\u2713 ' + disc.label + ' berhasil diterapkan!';
+        feedback.className   = 'text-xs mt-1.5 text-green-600';
+        input.classList.remove('border-red-300');
+        input.classList.add('border-green-400');
+    } else {
+        appliedDiscount = null;
+        feedback.textContent = '\u2717 Kode diskon tidak valid';
+        feedback.className   = 'text-xs mt-1.5 text-red-500';
+        input.classList.remove('border-green-400');
+        input.classList.add('border-red-300');
+    }
+
+    // Recalculate
+    updatePayment(currentSubtotal);
+}
+
+function clearDiscount() {
+    appliedDiscount = null;
+    const input    = document.getElementById('discount-code-input');
+    const feedback = document.getElementById('discount-feedback');
+    if (input) {
+        input.value = '';
+        input.classList.remove('border-green-400', 'border-red-300');
+    }
+    if (feedback) {
+        feedback.textContent = '';
+        feedback.className   = 'text-xs mt-1.5 hidden';
+    }
+}
+
+// ===== INPUT UANG TUNAI & KEMBALIAN =====
+function updateKembalian() {
+    const cashSection = document.getElementById('cash-input-section');
+    const kembalianEl = document.getElementById('kembalian-display');
+    const confirmBtn  = document.getElementById('btn-tambah-pesanan');
+
+    // Hanya tampilkan jika metode COD/Tunai dipilih
+    if (selectedPayment !== 'cod') {
+        if (cashSection)  cashSection.classList.add('hidden');
+        if (kembalianEl)  kembalianEl.classList.add('hidden');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+        return;
+    }
+
+    if (cashSection) cashSection.classList.remove('hidden');
+
+    const cashInput = document.getElementById('cash-amount-input');
+    const uangDiterima = parseInt((cashInput?.value || '').replace(/\D/g, '')) || 0;
+
+    // Hitung total akhir (sama seperti di updatePayment)
+    const pajak = currentSubtotal > 0 ? Math.round(currentSubtotal * PAJAK_PERSEN) : 0;
+    let diskon = 0;
+    if (appliedDiscount && currentSubtotal > 0) {
+        if (appliedDiscount.type === 'percent') {
+            diskon = Math.round(currentSubtotal * appliedDiscount.value / 100);
+        } else {
+            diskon = appliedDiscount.value;
+        }
+    }
+    const totalBayar = Math.max(0, currentSubtotal + pajak - diskon);
+
+    if (kembalianEl) kembalianEl.classList.remove('hidden');
+
+    const kembalianValue = document.getElementById('kembalian-value');
+    const kembalianWarn  = document.getElementById('kembalian-warning');
+
+    if (uangDiterima === 0 && (!cashInput || cashInput.value === '')) {
+        // Belum diisi
+        if (kembalianValue) kembalianValue.textContent = 'Rp0';
+        if (kembalianWarn)  kembalianWarn.classList.add('hidden');
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+        return;
+    }
+
+    const kembalian = uangDiterima - totalBayar;
+
+    if (kembalian < 0) {
+        // Uang kurang
+        if (kembalianValue) {
+            kembalianValue.textContent = '- Rp' + formatRp(Math.abs(kembalian));
+            kembalianValue.classList.add('text-red-500');
+            kembalianValue.classList.remove('text-green-600');
+        }
+        if (kembalianWarn) {
+            kembalianWarn.textContent = 'Uang tidak mencukupi! Kurang Rp' + formatRp(Math.abs(kembalian));
+            kembalianWarn.classList.remove('hidden');
+        }
+        if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    } else {
+        // Uang cukup
+        if (kembalianValue) {
+            kembalianValue.textContent = 'Rp' + formatRp(kembalian);
+            kembalianValue.classList.remove('text-red-500');
+            kembalianValue.classList.add('text-green-600');
+        }
+        if (kembalianWarn) kembalianWarn.classList.add('hidden');
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+}
+
+function formatCashInput(input) {
+    // Simpan posisi cursor
+    let raw = input.value.replace(/\D/g, '');
+    if (raw === '') {
+        input.value = '';
+    } else {
+        input.value = parseInt(raw).toLocaleString('id-ID');
+    }
+    updateKembalian();
 }
 
 function formatRp(n) {
@@ -216,7 +382,7 @@ function showToast(msg, type = 'success') {
     const isError = type === 'error';
     const toast = document.createElement('div');
     toast.id        = 'success-toast';
-    toast.className = `fixed top-22 right-2 z-[100] flex items-center gap-3 bg-white border border-green-200 shadow-lg rounded-2xl px-6 py-4 transition-all duration-500 opacity-0 -translate-y-4 ${isError ? 'border-red-200' : 'border-green-200'}`;
+    toast.className = `fixed top-22 right-2 z-[100] flex items-center gap-3 bg-white dark:bg-[#1e1e21] border shadow-lg rounded-2xl px-6 py-4 transition-all duration-500 opacity-0 -translate-y-4 ${isError ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}`;
     toast.innerHTML = `
         <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isError ? 'bg-red-100' : 'bg-green-100'}">
             ${isError
@@ -230,8 +396,8 @@ function showToast(msg, type = 'success') {
             }
         </div>
         <div>
-            <p class="text-sm font-semibold text-[#2c2c2c]">${msg}</p>
-            <p class="text-xs ${isError ? 'text-red-400' : 'text-gray-400'}">${isError ? 'Silakan periksa kembali' : 'Pesanan telah disimpan'}</p>
+            <p class="text-sm font-semibold text-[#2c2c2c] dark:text-gray-100">${msg}</p>
+            <p class="text-xs ${isError ? 'text-red-400' : 'text-gray-400 dark:text-gray-500'}">${isError ? 'Silakan periksa kembali' : 'Pesanan telah disimpan'}</p>
         </div>`;
     document.body.appendChild(toast);
 
@@ -364,15 +530,20 @@ function resetAllOrderState() {
 
     // Reset metode pembayaran
     selectedPayment = '';
-    document.querySelectorAll('.payment-btn').forEach(b => {
-        b.classList.remove('border-rose-500', 'bg-rose-50');
-        b.classList.add('border-gray-200');
-        b.querySelector('svg').classList.remove('text-rose-500');
-        b.querySelector('svg').classList.add('text-gray-400');
-        b.querySelector('span').classList.remove('text-rose-500');
-        b.querySelector('span').classList.add('text-gray-600');
-    });
-    document.getElementById('selected-payment-label')?.classList.add('hidden');
+    resetAllPaymentButtons();
+    const label = document.getElementById('selected-payment-label');
+    if (label) label.classList.add('hidden');
+
+    // Reset kode diskon
+    clearDiscount();
+
+    // Reset input uang tunai
+    const cashInput = document.getElementById('cash-amount-input');
+    if (cashInput) cashInput.value = '';
+    const cashSection = document.getElementById('cash-input-section');
+    if (cashSection) cashSection.classList.add('hidden');
+    const kembalianEl = document.getElementById('kembalian-display');
+    if (kembalianEl) kembalianEl.classList.add('hidden');
 
     // Reset ringkasan
     renderOrderSummary();
@@ -381,34 +552,71 @@ function resetAllOrderState() {
 // ===== METODE PEMBAYARAN =====
 let selectedPayment = '';
 
-function selectPayment(btn, method) {
-    // Reset semua tombol
+const paymentLabels = {
+    'transfer': 'Transfer Bank',
+    'cod':      'Tunai / COD',
+    'qris':     'QRIS',
+};
+
+function resetAllPaymentButtons() {
     document.querySelectorAll('.payment-btn').forEach(b => {
         b.classList.remove('border-rose-500', 'bg-rose-50');
         b.classList.add('border-gray-200');
-        b.querySelector('svg').classList.remove('text-rose-500');
-        b.querySelector('svg').classList.add('text-gray-400');
-        b.querySelector('span').classList.remove('text-rose-500');
-        b.querySelector('span').classList.add('text-gray-600');
+        const svg = b.querySelector('svg');
+        const span = b.querySelector('span');
+        if (svg) {
+            svg.classList.remove('text-rose-500');
+            svg.classList.add('text-gray-400');
+        }
+        if (span) {
+            span.classList.remove('text-rose-500');
+            span.classList.add('text-gray-600');
+        }
     });
+}
 
-    // Aktifkan tombol yang dipilih
+function activatePaymentButton(btn) {
     btn.classList.add('border-rose-500', 'bg-rose-50');
     btn.classList.remove('border-gray-200');
-    btn.querySelector('svg').classList.add('text-rose-500');
-    btn.querySelector('svg').classList.remove('text-gray-400');
-    btn.querySelector('span').classList.add('text-rose-500');
-    btn.querySelector('span').classList.remove('text-gray-600');
+    const svg = btn.querySelector('svg');
+    const span = btn.querySelector('span');
+    if (svg) {
+        svg.classList.add('text-rose-500');
+        svg.classList.remove('text-gray-400');
+    }
+    if (span) {
+        span.classList.add('text-rose-500');
+        span.classList.remove('text-gray-600');
+    }
+}
+
+function selectPayment(btn, method) {
+    // Toggle: jika metode yang sama diklik lagi, deselect
+    if (selectedPayment === method) {
+        resetAllPaymentButtons();
+        selectedPayment = '';
+        const label = document.getElementById('selected-payment-label');
+        if (label) label.classList.add('hidden');
+        updateKembalian();
+        return;
+    }
+
+    // Reset semua tombol, lalu aktifkan yang dipilih
+    resetAllPaymentButtons();
+    activatePaymentButton(btn);
 
     selectedPayment = method;
 
-    const labels = {
-        'transfer': 'Transfer Bank',
-        'cod':      'Tunai / COD',
-        'qris':     'QRIS',
-        'ewallet':  'E-Wallet',
-    };
     const label = document.getElementById('selected-payment-label');
-    label.textContent = '✓ ' + labels[method] + ' dipilih';
-    label.classList.remove('hidden');
+    if (label) {
+        label.textContent = '\u2713 ' + (paymentLabels[method] || method) + ' dipilih';
+        label.classList.remove('hidden');
+    }
+
+    // Reset input tunai saat ganti metode
+    const cashInput = document.getElementById('cash-amount-input');
+    if (cashInput) cashInput.value = '';
+
+    // Tampilkan/sembunyikan section tunai + update kembalian
+    updateKembalian();
 }
