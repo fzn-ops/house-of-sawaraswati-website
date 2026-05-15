@@ -27,7 +27,7 @@ Route::post('/midtrans/notification', [MidtransController::class, 'notification'
 // ===== ADMIN ROUTES =====
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/',        [AdminAuthController::class, 'showLogin'])->name('login');
-    Route::post('/login',  [AdminAuthController::class, 'login'])->name('login.post');
+    Route::post('/login',  [AdminAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
  
     // Protected routes (perlu login)

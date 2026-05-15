@@ -62,6 +62,13 @@
             </div>
             @endif
 
+            {{-- Too many attempts --}}
+            @if ($errors->has('throttle'))
+            <div class="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-700">
+                {{ $errors->first('throttle') }}
+            </div>
+            @endif
+
             <form method="POST" action="{{ route('admin.login.post') }}">
                 @csrf
 

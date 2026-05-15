@@ -25,10 +25,6 @@
                    class="nav-link text-sm font-body font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors duration-200 {{ request()->routeIs('katalog') ? 'text-rose-600' : '' }}">
                     Katalog
                 </a>
-                {{--  <a href="{{ route('aksesoris.index') }}"
-                   class="nav-link text-sm font-body font-medium tracking-widest uppercase text-charcoal hover:text-rose-600 transition-colors duration-200 {{ request()->routeIs('aksesoris.*') ? 'text-rose-600' : '' }}">
-                    
-                </a>--}}
             </nav>
 
             {{-- CTA + Mobile Toggle --}}
