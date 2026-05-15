@@ -206,6 +206,63 @@
         </div>
     </div>
 
+    {{-- ===== MODAL STRUK ===== --}}
+    <div id="receipt-modal"
+         class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 hidden items-center justify-center p-4"
+         onclick="closeReceipt()">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-0 overflow-hidden" onclick="event.stopPropagation()">
+            <div id="receipt-content" class="p-6">
+                <div class="text-center mb-4">
+                    <p class="text-base font-bold text-charcoal">House of Saraswati</p>
+                    <p class="text-xs text-gray-500">Hijab & Gamis Collection</p>
+                    <p class="text-xs text-gray-400 mt-1" id="receipt-date"></p>
+                </div>
+                <hr class="border-dashed border-gray-300 mb-3">
+                <p class="text-xs text-gray-500 mb-2">Order ID: <span class="font-medium text-charcoal" id="receipt-order-id"></span></p>
+                <p class="text-xs text-gray-500 mb-3">Kasir: <span class="font-medium text-charcoal" id="receipt-kasir"></span></p>
+                <hr class="border-dashed border-gray-300 mb-3">
+                <div id="receipt-items" class="space-y-1.5 mb-3"></div>
+                <hr class="border-dashed border-gray-300 mb-3">
+                <div class="space-y-1 text-xs">
+                    <div class="flex justify-between text-gray-500">
+                        <span>Subtotal</span><span id="receipt-subtotal"></span>
+                    </div>
+                    <div class="flex justify-between text-gray-500">
+                        <span>Pajak (1%)</span><span id="receipt-pajak"></span>
+                    </div>
+                    <div class="flex justify-between text-gray-500" id="receipt-diskon-row">
+                        <span>Diskon</span><span id="receipt-diskon"></span>
+                    </div>
+                    <hr class="border-gray-200 my-1">
+                    <div class="flex justify-between font-bold text-sm text-charcoal">
+                        <span>Total</span><span id="receipt-total"></span>
+                    </div>
+                    <div class="flex justify-between text-gray-500" id="receipt-bayar-row">
+                        <span>Bayar</span><span id="receipt-bayar"></span>
+                    </div>
+                    <div class="flex justify-between text-gray-500" id="receipt-kembalian-row">
+                        <span>Kembalian</span><span id="receipt-kembalian"></span>
+                    </div>
+                </div>
+                <hr class="border-dashed border-gray-300 mt-3 mb-3">
+                <div class="text-center">
+                    <p class="text-xs text-gray-500">Metode: <span class="font-medium" id="receipt-metode"></span></p>
+                    <p class="text-xs text-gray-400 mt-2">Terima kasih atas pembelian Anda!</p>
+                </div>
+            </div>
+            <div class="flex border-t border-gray-100">
+                <button onclick="printReceipt()"
+                        class="flex-1 py-3 text-sm font-semibold text-rose-500 hover:bg-rose-50 transition-colors">
+                    Cetak Struk
+                </button>
+                <button onclick="closeReceipt()"
+                        class="flex-1 py-3 text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors border-l border-gray-100">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script src="{{ asset('js/admin_pesanan.js') }}"></script>
     @endpush

@@ -459,19 +459,17 @@ function tambahkanPesanan() {
     })
     .then(data => {
         if (data.is_cash) {
-            // Pembayaran tunai — langsung sukses
-            resetAllOrderState();
             showToast('Pesanan berhasil dibuat! (Tunai)', 'success');
-            setTimeout(() => window.location.reload(), 1500);
+            showReceipt(data.order_id);
+            resetAllOrderState();
         } else if (data.snap_token) {
-            // Pembayaran online — buka Midtrans Snap
             window.snap.pay(data.snap_token, {
                 onSuccess: function(result) {
                     console.log('Payment Success:', result);
                     updatePaymentStatus(data.order_id, 'paid');
-                    resetAllOrderState();
                     showToast('Pembayaran berhasil!', 'success');
-                    setTimeout(() => window.location.reload(), 1500);
+                    showReceipt(data.order_id);
+                    resetAllOrderState();
                 },
                 onPending: function(result) {
                     console.log('Payment Pending:', result);
@@ -491,9 +489,9 @@ function tambahkanPesanan() {
                 }
             });
         } else {
-            resetAllOrderState();
             showToast('Pesanan berhasil dibuat!', 'success');
-            setTimeout(() => window.location.reload(), 1500);
+            showReceipt(data.order_id);
+            resetAllOrderState();
         }
     })
     .catch(error => {
@@ -619,4 +617,124 @@ function selectPayment(btn, method) {
 
     // Tampilkan/sembunyikan section tunai + update kembalian
     updateKembalian();
+}
+
+// ===== STRUK / RECEIPT =====
+function showReceipt(orderId) {
+    const items = Object.values(orderItems);
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+        + ' ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    const paymentLabels = { 'transfer': 'Transfer Bank', 'cod': 'Tunai / COD', 'qris': 'QRIS' };
+
+    document.getElementById('receipt-date').textContent = dateStr;
+    document.getElementById('receipt-order-id').textContent = orderId || '-';
+    document.getElementById('receipt-kasir').textContent = document.querySelector('header .text-sm')?.textContent?.trim() || 'Kasir';
+    document.getElementById('receipt-metode').textContent = paymentLabels[selectedPayment] || selectedPayment;
+
+    // Items
+    const itemsHTML = items.map(item => `
+        <div class="flex justify-between text-xs">
+            <span class="text-gray-600">${item.name} (${item.ukuran}) x${item.qty}</span>
+            <span class="text-charcoal font-medium">Rp${(item.price * item.qty).toLocaleString('id-ID')}</span>
+        </div>
+    `).join('');
+    document.getElementById('receipt-items').innerHTML = itemsHTML;
+
+    // Totals
+    const subtotal = items.reduce((sum, i) => sum + (i.price * i.qty), 0);
+    const pajak = Math.round(subtotal * PAJAK_PERSEN);
+    let diskon = 0;
+    if (appliedDiscount) {
+        diskon = appliedDiscount.type === 'percent'
+            ? Math.round(subtotal * appliedDiscount.value / 100)
+            : appliedDiscount.value;
+    }
+    const total = subtotal + pajak - diskon;
+
+    document.getElementById('receipt-subtotal').textContent = 'Rp' + subtotal.toLocaleString('id-ID');
+    document.getElementById('receipt-pajak').textContent = 'Rp' + pajak.toLocaleString('id-ID');
+
+    const diskonRow = document.getElementById('receipt-diskon-row');
+    if (diskon > 0) {
+        document.getElementById('receipt-diskon').textContent = '-Rp' + diskon.toLocaleString('id-ID');
+        diskonRow.classList.remove('hidden');
+    } else {
+        diskonRow.classList.add('hidden');
+    }
+
+    document.getElementById('receipt-total').textContent = 'Rp' + total.toLocaleString('id-ID');
+
+    // Bayar & kembalian (hanya untuk tunai)
+    const bayarRow = document.getElementById('receipt-bayar-row');
+    const kembalianRow = document.getElementById('receipt-kembalian-row');
+    if (selectedPayment === 'cod') {
+        const cashInput = document.getElementById('cash-amount-input');
+        const cashAmount = parseInt(cashInput?.value.replace(/\D/g, '')) || 0;
+        const kembalian = cashAmount - total;
+        document.getElementById('receipt-bayar').textContent = 'Rp' + cashAmount.toLocaleString('id-ID');
+        document.getElementById('receipt-kembalian').textContent = 'Rp' + Math.max(0, kembalian).toLocaleString('id-ID');
+        bayarRow.classList.remove('hidden');
+        kembalianRow.classList.remove('hidden');
+    } else {
+        bayarRow.classList.add('hidden');
+        kembalianRow.classList.add('hidden');
+    }
+
+    const modal = document.getElementById('receipt-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeReceipt() {
+    const modal = document.getElementById('receipt-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    window.location.reload();
+}
+
+function printReceipt() {
+    const content = document.getElementById('receipt-content').innerHTML;
+    const printWindow = window.open('', '_blank', 'width=350,height=600');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>Struk - House of Saraswati</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Courier New', monospace; }
+                body { padding: 10px; font-size: 12px; width: 280px; }
+                .text-center { text-align: center; }
+                .text-xs { font-size: 11px; }
+                .text-sm { font-size: 12px; }
+                .text-base { font-size: 13px; }
+                .font-bold { font-weight: bold; }
+                .font-medium { font-weight: 600; }
+                .text-charcoal { color: #2c2c2c; }
+                .text-gray-400, .text-gray-500 { color: #888; }
+                .text-gray-600 { color: #555; }
+                .mb-1 { margin-bottom: 2px; }
+                .mb-2 { margin-bottom: 4px; }
+                .mb-3 { margin-bottom: 8px; }
+                .mb-4 { margin-bottom: 12px; }
+                .mt-1 { margin-top: 2px; }
+                .mt-2 { margin-top: 4px; }
+                .mt-3 { margin-top: 8px; }
+                .my-1 { margin: 2px 0; }
+                .p-6 { padding: 15px; }
+                .space-y-1 > * + * { margin-top: 2px; }
+                .space-y-1\\.5 > * + * { margin-top: 4px; }
+                hr { border: none; border-top: 1px dashed #ccc; margin: 8px 0; }
+                .flex { display: flex; }
+                .justify-between { justify-content: space-between; }
+                .hidden { display: none; }
+                @media print { body { width: 100%; } }
+            </style>
+        </head>
+        <body>${content}</body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); printWindow.close(); }, 300);
 }

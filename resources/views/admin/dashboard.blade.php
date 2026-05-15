@@ -119,47 +119,58 @@
         </div>
     </div>
 
-    {{-- Ringkasan per Metode Pembayaran --}}
-    <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 p-5 mb-8">
-        <p class="text-sm font-semibold text-charcoal dark:text-gray-100 mb-3">Ringkasan per Metode Pembayaran</p>
-        <div class="grid grid-cols-3 gap-3">
+    {{-- Grid: Pie Chart + Transaksi Terbaru --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+        {{-- Ringkasan per Metode Pembayaran --}}
+        <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 p-6">
+            <p class="text-sm font-semibold text-charcoal dark:text-gray-100 mb-5">Ringkasan per Metode Pembayaran</p>
             @php
                 $methods = ['transfer' => 'Transfer', 'cod' => 'Tunai / COD', 'qris' => 'QRIS'];
-                $colorMap = [
-                    'transfer' => ['bg' => 'bg-blue-50 dark:bg-blue-900/20', 'text' => 'text-blue-600 dark:text-blue-400', 'bar' => 'bg-blue-500'],
-                    'cod'      => ['bg' => 'bg-green-50 dark:bg-green-900/20', 'text' => 'text-green-600 dark:text-green-400', 'bar' => 'bg-green-500'],
-                    'qris'     => ['bg' => 'bg-purple-50 dark:bg-purple-900/20', 'text' => 'text-purple-600 dark:text-purple-400', 'bar' => 'bg-purple-500'],
-                ];
-            @endphp
-            @foreach($methods as $key => $label)
-                @php
+                $chartData = [];
+                $chartLabels = [];
+                $chartColors = ['#3b82f6', '#22c55e', '#a855f7'];
+                $methodStats = [];
+                foreach ($methods as $key => $label) {
                     $methodData = $revenueByMethod->get($key);
                     $rev = $methodData ? $methodData->total : 0;
                     $cnt = $methodData ? $methodData->cnt : 0;
                     $percent = $totalRevenue > 0 ? round(($rev / $totalRevenue) * 100) : 0;
-                    $colors = $colorMap[$key];
-                @endphp
-                <div class="{{ $colors['bg'] }} rounded-xl p-3">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-medium {{ $colors['text'] }}">{{ $label }}</span>
-                        <span class="text-xs text-gray-400 dark:text-gray-500">{{ $cnt }} trx</span>
-                    </div>
-                    <p class="text-sm font-bold text-charcoal dark:text-gray-100 mb-1.5">Rp{{ number_format($rev, 0, ',', '.') }}</p>
-                    <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div class="{{ $colors['bar'] }} h-full rounded-full" style="width: {{ $percent }}%"></div>
-                    </div>
-                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ $percent }}% dari total</p>
+                    $chartLabels[] = $label;
+                    $chartData[] = $rev;
+                    $methodStats[] = ['label' => $label, 'rev' => $rev, 'cnt' => $cnt, 'percent' => $percent];
+                }
+            @endphp
+            <div class="flex items-center gap-6">
+                <div class="w-36 h-36 flex-shrink-0">
+                    <canvas id="paymentPieChart"></canvas>
                 </div>
-            @endforeach
+                <div class="flex-1 space-y-4">
+                    @foreach($methodStats as $i => $stat)
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2.5 h-2.5 rounded-full" style="background: {{ $chartColors[$i] }}"></div>
+                                <span class="text-sm font-medium text-charcoal dark:text-gray-100">{{ $stat['label'] }}</span>
+                            </div>
+                            <span class="text-sm font-bold text-charcoal dark:text-gray-100">{{ $stat['percent'] }}%</span>
+                        </div>
+                        <div class="flex items-center justify-between pl-[18px]">
+                            <span class="text-xs text-gray-400 dark:text-gray-500">Rp{{ number_format($stat['rev'], 0, ',', '.') }}</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ $stat['cnt'] }} transaksi</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
         </div>
-    </div>
 
-    {{-- Transaksi Terbaru --}}
-    <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-            <h2 class="text-base font-semibold text-charcoal dark:text-gray-100">Transaksi Terbaru</h2>
-            <a href="{{ route('admin.penjualan') }}" class="text-xs text-rose-500 hover:text-rose-600 font-medium transition-colors">Lihat Semua →</a>
-        </div>
+        {{-- Transaksi Terbaru --}}
+        <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                <h2 class="text-base font-semibold text-charcoal dark:text-gray-100">Transaksi Terbaru</h2>
+                <a href="{{ route('admin.penjualan') }}" class="text-xs text-rose-500 hover:text-rose-600 font-medium transition-colors">Lihat Semua →</a>
+            </div>
         <div class="overflow-x-auto">
             <table class="w-full">
                 <thead>
@@ -186,6 +197,45 @@
                 </tbody>
             </table>
         </div>
+        </div>
     </div>
+
+    @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        const ctx = document.getElementById('paymentPieChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: @json($chartLabels),
+                datasets: [{
+                    data: @json($chartData),
+                    backgroundColor: @json($chartColors),
+                    borderWidth: 0,
+                    hoverOffset: 4,
+                    spacing: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                cutout: '60%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                                return context.label + ': Rp' + value.toLocaleString('id-ID') + ' (' + percent + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+    @endpush
 
 </x-layouts.admin>

@@ -14,8 +14,8 @@ class DashboardController extends Controller
     {
         $totalProduk       = Product::count();
         $totalUser         = User::count();
-        $transaksiHariIni  = Transaction::whereDate('transaction_date', Carbon::today())->count();
-        $pendapatanHariIni = Transaction::whereDate('transaction_date', Carbon::today())->sum('total_price');
+        $transaksiHariIni  = Transaction::whereDate('transaction_date', Carbon::today())->where('payment_status', 'paid')->count();
+        $pendapatanHariIni = Transaction::whereDate('transaction_date', Carbon::today())->where('payment_status', 'paid')->sum('total_price');
         $transaksiTerbaru  = Transaction::with('user')->orderBy('created_at', 'desc')->limit(5)->get();
 
         // Statistik penjualan (semua waktu, hanya transaksi lunas)

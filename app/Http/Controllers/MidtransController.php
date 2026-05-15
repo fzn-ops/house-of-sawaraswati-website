@@ -58,22 +58,21 @@ class MidtransController extends Controller
         if ($transactionStatus == 'capture') {
             if ($fraudStatus == 'accept') {
                 $transaction->payment_status = 'paid';
+                $this->decrementStock($transaction);
             } else {
                 $transaction->payment_status = 'challenge';
             }
         } elseif ($transactionStatus == 'settlement') {
             $transaction->payment_status = 'paid';
+            $this->decrementStock($transaction);
         } elseif ($transactionStatus == 'pending') {
             $transaction->payment_status = 'pending';
         } elseif (in_array($transactionStatus, ['deny', 'cancel', 'expire'])) {
             $transaction->payment_status = 'failed';
-
-            // Kembalikan stok jika pembayaran gagal
-            $this->restoreStock($transaction);
         } elseif ($transactionStatus == 'refund') {
             $transaction->payment_status = 'refunded';
 
-            // Kembalikan stok jika di-refund
+            // Kembalikan stok jika di-refund (stok sudah dipotong saat paid)
             $this->restoreStock($transaction);
         }
 
@@ -98,5 +97,18 @@ class MidtransController extends Controller
         }
 
         Log::info("Stock restored for order: {$transaction->order_id}");
+    }
+
+    private function decrementStock(Transaction $transaction)
+    {
+        $transaction->load('transactionDetails.product');
+
+        foreach ($transaction->transactionDetails as $detail) {
+            if ($detail->product) {
+                $detail->product->decrement('stok', $detail->quantity);
+            }
+        }
+
+        Log::info("Stock decremented for order: {$transaction->order_id}");
     }
 }

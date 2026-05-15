@@ -77,15 +77,12 @@ class TransactionController extends Controller
                     'subtotal'       => $subtotal,
                 ]);
 
-                // updateStok() : void — kurangi stok produk
-                $product->decrement('stok', $item['quantity']);
-
                 // Siapkan item detail untuk Midtrans
                 $itemDetails[] = [
                     'id'       => (string) $product->product_id,
                     'price'    => (int) $product->price,
                     'quantity' => (int) $item['quantity'],
-                    'name'     => substr($product->name, 0, 50), // Midtrans limit 50 chars
+                    'name'     => substr($product->name, 0, 50),
                 ];
             }
 
@@ -101,8 +98,9 @@ class TransactionController extends Controller
                 $snapToken = $this->generateSnapToken($transaction, $itemDetails, $totalPrice, $paymentMethod);
                 $transaction->update(['snap_token' => $snapToken]);
             } else {
-                // Pembayaran tunai langsung paid
+                // Pembayaran tunai langsung paid — potong stok sekarang
                 $transaction->update(['payment_status' => 'paid']);
+                $this->decrementStock($transaction);
             }
 
             DB::commit();
@@ -209,11 +207,43 @@ class TransactionController extends Controller
             return response()->json(['success' => false, 'error' => 'Transaksi tidak ditemukan'], 404);
         }
 
-        $transaction->update(['payment_status' => $request->status]);
+        $oldStatus = $transaction->payment_status;
+        $newStatus = $request->status;
+
+        // Validasi transisi status yang diperbolehkan
+        $allowedTransitions = [
+            'pending' => ['paid', 'failed'],
+            'failed'  => ['pending'],
+            'paid'    => [],
+        ];
+
+        $allowed = $allowedTransitions[$oldStatus] ?? [];
+        if (!in_array($newStatus, $allowed)) {
+            return response()->json([
+                'success' => false,
+                'error'   => "Tidak bisa ubah status dari '{$oldStatus}' ke '{$newStatus}'",
+            ], 422);
+        }
+
+        $transaction->update(['payment_status' => $newStatus]);
+
+        // Potong stok saat status berubah ke paid
+        if ($newStatus === 'paid' && $oldStatus !== 'paid') {
+            $this->decrementStock($transaction);
+        }
+
+        // Audit trail
+        Log::info("Payment status updated manually", [
+            'order_id'   => $transaction->order_id,
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'changed_by' => Auth::id(),
+            'changed_at' => now()->toDateTimeString(),
+        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Status pembayaran berhasil diperbarui',
+            'message' => "Status berhasil diubah dari '{$oldStatus}' ke '{$newStatus}'",
         ]);
     }
 
@@ -286,8 +316,18 @@ class TransactionController extends Controller
             'transfer' => 'Transfer',
             'cod'      => 'Tunai / COD',
             'qris'     => 'QRIS',
-
         ];
         return $map[$method] ?? ($method ?: 'Tunai / COD');
+    }
+
+    private function decrementStock(Transaction $transaction)
+    {
+        $transaction->load('transactionDetails.product');
+
+        foreach ($transaction->transactionDetails as $detail) {
+            if ($detail->product) {
+                $detail->product->decrement('stok', $detail->quantity);
+            }
+        }
     }
 }
