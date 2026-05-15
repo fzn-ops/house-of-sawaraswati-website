@@ -93,10 +93,10 @@
     </div>
 
     {{-- ===== Table Card ===== --}}
-    <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
+    <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800">
 
         {{-- Toolbar --}}
-        <div class="flex items-center justify-end gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+        <div class="relative z-10 flex items-center justify-end gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
             {{-- Filter --}}
             <div class="relative">
                 <button onclick="toggleFilter()"
@@ -107,7 +107,7 @@
                     Filter
                 </button>
                 <div id="filter-dropdown"
-                     class="hidden absolute right-0 top-11 bg-white dark:bg-[#1e1e21] border border-gray-100 dark:border-gray-800 rounded-xl shadow-lg p-4 z-20 w-56">
+                     class="hidden absolute right-0 top-11 bg-white dark:bg-[#1e1e21] border border-gray-100 dark:border-gray-800 rounded-xl shadow-lg p-4 z-50 w-56 max-h-80 overflow-y-auto">
                     <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-2">Metode Pembayaran</p>
                     @foreach(['Semua','Transfer','Tunai / COD','QRIS'] as $m)
                     <label class="flex items-center gap-2 py-1.5 cursor-pointer group">
@@ -166,7 +166,7 @@
         </div>
 
         {{-- Pagination --}}
-        <div class="flex items-center justify-between bg-rose-500 px-6 py-3">
+        <div class="flex items-center justify-between bg-rose-500 px-6 py-3 rounded-b-2xl">
             <p class="text-white text-sm" id="pagination-info">Menampilkan 0 dari 0 hasil</p>
             <div class="flex items-center gap-2">
                 <button onclick="changePage(-1)" id="btn-prev"

@@ -161,26 +161,25 @@ function goToPage(p) {
 
 // ===== FILTER & SEARCH =====
 function applyFilter() {
-    const q      = document.getElementById('search-input').value.toLowerCase();
-    const metode = document.querySelector('input[name="filter-payment"]:checked')?.value || 'Semua';
-
-    filteredData = allData.filter(row => {
-        const produkText  = formatProdukText(row.produk).toLowerCase();
-        const matchSearch = !q
-            || row.id.toLowerCase().includes(q)
-            || produkText.includes(q)
-            || row.metode.toLowerCase().includes(q);
-        const matchMetode = metode === 'Semua' || row.metode === metode;
-        return matchSearch && matchMetode;
-    });
-
-    currentPage = 1;
-    renderTable();
-    document.getElementById('filter-dropdown').classList.add('hidden');
+    // Always re-apply date range filter first, then extra filters on top
+    if (activeDateRange !== 'all') {
+        setDateRange(activeDateRange);
+    } else {
+        filteredData = applyExtraFilters(allData);
+        currentPage = 1;
+        renderTable();
+        updateReportingStats();
+    }
 }
 
 function toggleFilter() {
-    document.getElementById('filter-dropdown').classList.toggle('hidden');
+    const dropdown = document.getElementById('filter-dropdown');
+    const isHidden = dropdown.classList.contains('hidden');
+    if (isHidden) {
+        dropdown.classList.remove('hidden');
+    } else {
+        dropdown.classList.add('hidden');
+    }
 }
 
 document.addEventListener('click', e => {
@@ -440,9 +439,11 @@ function parseIndonesianDate(str) {
     const months = {
         'januari': 0, 'februari': 1, 'maret': 2, 'april': 3,
         'mei': 4, 'juni': 5, 'juli': 6, 'agustus': 7,
-        'september': 8, 'oktober': 9, 'november': 10, 'desember': 11
+        'september': 8, 'oktober': 9, 'november': 10, 'desember': 11,
+        'january': 0, 'february': 1, 'march': 2, 'april': 3,
+        'may': 4, 'june': 5, 'july': 6, 'august': 7,
+        'september': 8, 'october': 9, 'november': 10, 'december': 11
     };
-    // Format: "14 April 2026 15:30" atau "14 April 2026"
     const parts = str.trim().split(/\s+/);
     if (parts.length < 3) return null;
     const day   = parseInt(parts[0]);
@@ -461,7 +462,6 @@ function parseIndonesianDate(str) {
 function setDateRange(range) {
     activeDateRange = range;
 
-    // Update button styles
     document.querySelectorAll('.date-range-btn').forEach(btn => {
         btn.classList.remove('bg-rose-500', 'text-white');
         btn.classList.add('text-gray-500', 'dark:text-gray-400');
@@ -473,7 +473,6 @@ function setDateRange(range) {
         buttons[rangeMap[range]].classList.remove('text-gray-500', 'dark:text-gray-400');
     }
 
-    // Calculate date boundaries
     const now   = new Date();
     let dateFrom = null;
     let dateTo   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
@@ -500,6 +499,10 @@ function setDateRange(range) {
             const toVal   = document.getElementById('date-to').value;
             if (fromVal) dateFrom = new Date(fromVal + 'T00:00:00');
             if (toVal)   dateTo   = new Date(toVal + 'T23:59:59');
+            if (!fromVal && !toVal) {
+                dateFrom = null;
+                dateTo = null;
+            }
             break;
         case 'all':
         default:
@@ -508,7 +511,6 @@ function setDateRange(range) {
             break;
     }
 
-    // Filter data by date
     let dateFiltered;
     if (dateFrom || dateTo) {
         dateFiltered = allData.filter(row => {
@@ -522,7 +524,6 @@ function setDateRange(range) {
         dateFiltered = [...allData];
     }
 
-    // Re-apply search, payment, and status filters on top of date filter
     filteredData = applyExtraFilters(dateFiltered);
 
     currentPage = 1;
@@ -686,21 +687,6 @@ function applyExtraFilters(data) {
         return matchSearch && matchMetode && matchStatus;
     });
 }
-
-// ===== OVERRIDE applyFilter to also update stats =====
-const _originalApplyFilter = applyFilter;
-applyFilter = function() {
-    // Re-apply date range first, then extra filters
-    if (activeDateRange !== 'all') {
-        setDateRange(activeDateRange);
-    } else {
-        filteredData = applyExtraFilters(allData);
-        currentPage = 1;
-        renderTable();
-        updateReportingStats();
-    }
-    document.getElementById('filter-dropdown').classList.add('hidden');
-};
 
 // ===== INIT =====
 renderTable();

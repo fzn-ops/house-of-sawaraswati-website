@@ -75,7 +75,7 @@
                 @forelse ($featuredProducts as $item)
                 {{-- Card Produk --}}
                 <a href="{{ route('katalog.show', $item->product_id) }}" class="product-card group block rounded-2xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
-                    <div class="overflow-hidden h-64 bg-gray-50 aspect-square flex items-center justify-center">
+                    <div class="overflow-hidden h-64 bg-gray-50 flex items-center justify-center">
                         @if($item->image)
                         <img
                             src="{{ asset('storage/' . $item->image) }}"
@@ -88,6 +88,9 @@
                     </div>
                     <div class="p-4 text-center">
                         <span class="text-sm font-medium tracking-widest text-charcoal group-hover:text-rose-600 transition-colors">{{ $item->name }}</span>
+                        @if($item->description)
+                        <p class="text-xs text-gray-500 mt-1.5 line-clamp-2">{{ $item->description }}</p>
+                        @endif
                     </div>
                 </a>
                 @empty

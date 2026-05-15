@@ -19,11 +19,12 @@ function filterProducts() {
     let visible = 0;
 
     items.forEach(item => {
-        const name  = item.querySelector('h3').textContent.toLowerCase();
-        const price = parseInt(item.querySelector('p').textContent.replace(/[^0-9]/g, ''));
+        const name     = item.querySelector('h3').textContent.toLowerCase();
+        const price    = parseInt(item.querySelector('p').textContent.replace(/[^0-9]/g, ''));
+        const category = item.dataset.category || '';
 
         const matchSearch   = name.includes(search);
-        const matchKategori = !kategori || name.toLowerCase().includes(kategori.split(' ')[1]?.toLowerCase() || '');
+        const matchKategori = !kategori || category === kategori;
         const matchStok     = !stok || stok === 'Semua'
             || (stok === 'Tersedia' && !item.querySelector('.absolute.top-3'))
             || (stok === 'Habis'    &&  item.querySelector('.absolute.top-3'));
@@ -52,10 +53,9 @@ function filterProducts() {
         if (sort === 'harga-asc')  return priceA - priceB;
         if (sort === 'harga-desc') return priceB - priceA;
         if (sort === 'nama')       return nameA.localeCompare(nameB);
-        return 0; // terbaru = urutan asli
+        return 0;
     });
 
-    // Re-render urutan di DOM
     visibleItems.forEach(item => grid.appendChild(item));
 
     document.getElementById('empty-state').classList.toggle('hidden', visible > 0);

@@ -59,6 +59,101 @@
         </div>
     </div>
 
+    {{-- Statistik Penjualan --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {{-- Total Pendapatan --}}
+        <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xl font-bold text-charcoal dark:text-gray-100">Rp{{ number_format($totalRevenue, 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Total Pendapatan (Lunas)</p>
+            @if($pendingCount > 0)
+            <p class="text-xs text-amber-500 mt-0.5">{{ $pendingCount }} transaksi pending</p>
+            @endif
+        </div>
+        {{-- Jumlah Transaksi --}}
+        <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xl font-bold text-charcoal dark:text-gray-100">{{ number_format($totalPaidCount, 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Transaksi Lunas</p>
+            @if($pendingCount > 0 || $failedCount > 0)
+            <p class="text-xs text-amber-500 mt-0.5">
+                + {{ $pendingCount > 0 ? $pendingCount . ' pending' : '' }}{{ $pendingCount > 0 && $failedCount > 0 ? ', ' : '' }}{{ $failedCount > 0 ? $failedCount . ' gagal' : '' }}
+            </p>
+            @endif
+        </div>
+        {{-- Rata-rata --}}
+        <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xl font-bold text-charcoal dark:text-gray-100">Rp{{ number_format($avgPerTransaction, 0, ',', '.') }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Rata-rata / Transaksi</p>
+        </div>
+        {{-- Metode Terpopuler --}}
+        <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 p-5">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xl font-bold text-charcoal dark:text-gray-100">{{ $topMethodLabel }}</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Metode Terpopuler</p>
+        </div>
+    </div>
+
+    {{-- Ringkasan per Metode Pembayaran --}}
+    <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 p-5 mb-8">
+        <p class="text-sm font-semibold text-charcoal dark:text-gray-100 mb-3">Ringkasan per Metode Pembayaran</p>
+        <div class="grid grid-cols-3 gap-3">
+            @php
+                $methods = ['transfer' => 'Transfer', 'cod' => 'Tunai / COD', 'qris' => 'QRIS'];
+                $colorMap = [
+                    'transfer' => ['bg' => 'bg-blue-50 dark:bg-blue-900/20', 'text' => 'text-blue-600 dark:text-blue-400', 'bar' => 'bg-blue-500'],
+                    'cod'      => ['bg' => 'bg-green-50 dark:bg-green-900/20', 'text' => 'text-green-600 dark:text-green-400', 'bar' => 'bg-green-500'],
+                    'qris'     => ['bg' => 'bg-purple-50 dark:bg-purple-900/20', 'text' => 'text-purple-600 dark:text-purple-400', 'bar' => 'bg-purple-500'],
+                ];
+            @endphp
+            @foreach($methods as $key => $label)
+                @php
+                    $methodData = $revenueByMethod->get($key);
+                    $rev = $methodData ? $methodData->total : 0;
+                    $cnt = $methodData ? $methodData->cnt : 0;
+                    $percent = $totalRevenue > 0 ? round(($rev / $totalRevenue) * 100) : 0;
+                    $colors = $colorMap[$key];
+                @endphp
+                <div class="{{ $colors['bg'] }} rounded-xl p-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-medium {{ $colors['text'] }}">{{ $label }}</span>
+                        <span class="text-xs text-gray-400 dark:text-gray-500">{{ $cnt }} trx</span>
+                    </div>
+                    <p class="text-sm font-bold text-charcoal dark:text-gray-100 mb-1.5">Rp{{ number_format($rev, 0, ',', '.') }}</p>
+                    <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div class="{{ $colors['bar'] }} h-full rounded-full" style="width: {{ $percent }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">{{ $percent }}% dari total</p>
+                </div>
+            @endforeach
+        </div>
+    </div>
+
     {{-- Transaksi Terbaru --}}
     <div class="bg-white dark:bg-[#1e1e21] rounded-2xl border border-gray-100 dark:border-gray-800 overflow-hidden">
         <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">

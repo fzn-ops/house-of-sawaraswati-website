@@ -15,7 +15,7 @@ class Product extends Model
     }
 
     protected $fillable = [
-        'name', 'description', 'price', 'stok', 'image'
+        'name', 'description', 'category', 'price', 'stok', 'image'
     ];
 
     public function transactionDetails()

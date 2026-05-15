@@ -34,7 +34,8 @@
              data-name="{{ $p->name }}"
              data-price="{{ $p->price }}"
              data-stok="{{ $p->stok }}"
-             data-desc="{{ $p->description }}">
+             data-desc="{{ $p->description }}"
+             data-category="{{ $p->category }}">
             <div class="bg-gray-50 dark:bg-[#252528] overflow-hidden">
                 @if($p->image)
                 <img src="{{ asset('storage/' . $p->image) }}"
@@ -119,6 +120,17 @@
                                   class="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 resize-none transition-colors"></textarea>
                     </div>
                     <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Kategori</label>
+                        <select name="category"
+                                class="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 dark:text-gray-100 transition-colors">
+                            <option value="">Pilih Kategori</option>
+                            <option value="Gamis Polos">Gamis Polos</option>
+                            <option value="Gamis Motif">Gamis Motif</option>
+                            <option value="Gamis Set">Gamis Set</option>
+                            <option value="Kerudung">Kerudung</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Gambar Produk</label>
                         <input type="file" name="image" accept="image/*"
                                class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-rose-50 dark:file:bg-rose-900/20 file:text-rose-500 hover:file:bg-rose-100 transition-colors">
@@ -182,6 +194,17 @@
                                   class="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 resize-none transition-colors"></textarea>
                     </div>
                     <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Kategori</label>
+                        <select name="category" id="edit-category"
+                                class="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 dark:text-gray-100 transition-colors">
+                            <option value="">Pilih Kategori</option>
+                            <option value="Gamis Polos">Gamis Polos</option>
+                            <option value="Gamis Motif">Gamis Motif</option>
+                            <option value="Gamis Set">Gamis Set</option>
+                            <option value="Kerudung">Kerudung</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Gambar Produk (kosongkan jika tidak ingin ganti)</label>
                         <input type="file" name="image" accept="image/*"
                                class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-rose-50 dark:file:bg-rose-900/20 file:text-rose-500 hover:file:bg-rose-100 transition-colors">
@@ -218,6 +241,7 @@
             document.getElementById('edit-price').value = card.dataset.price;
             document.getElementById('edit-stok').value = card.dataset.stok;
             document.getElementById('edit-description').value = card.dataset.desc || '';
+            document.getElementById('edit-category').value = card.dataset.category || '';
             document.getElementById('edit-form').action = `/admin/produk/${id}`;
             document.getElementById('edit-modal-overlay').classList.remove('hidden');
             document.getElementById('edit-modal-overlay').classList.add('flex');

@@ -47,7 +47,7 @@
                     </button>
                     <div id="list-kategori" class="space-y-2">
                         @php
-                            $kategori = ['Gamis Polos', 'Gamis Motif', 'Gamis Set'];
+                            $kategori = ['Gamis Polos', 'Gamis Motif', 'Gamis Set', 'Kerudung'];
                         @endphp
                         @foreach ($kategori as $k)
                         <label class="flex items-center gap-2 cursor-pointer group">
@@ -140,7 +140,7 @@
                 {{-- Grid Produk --}}
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-5 mb-45 overflow-y-auto max-h-[calc(100vh-12rem)] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]" id="product-grid">
                     @foreach ($products as $i => $product)
-                    <a href="{{ route('katalog.show', $product->product_id) }}" class="product-item group block" data-index="{{ $i }}">  
+                    <a href="{{ route('katalog.show', $product->product_id) }}" class="product-item group block" data-index="{{ $i }}" data-category="{{ $product->category }}">  
                         {{-- Gambar --}}
                         <div class="relative overflow-hidden rounded-xl bg-gray-50 mb-3 flex items-center justify-center aspect-[3/4]">
                             @if($product->image)

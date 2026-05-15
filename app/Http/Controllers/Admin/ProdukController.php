@@ -28,12 +28,13 @@ class ProdukController extends Controller
         $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'category'    => 'nullable|string|max:100',
             'price'       => 'required|numeric|min:0',
             'stok'        => 'required|integer|min:0',
             'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $data = $request->only('name', 'description', 'price', 'stok');
+        $data = $request->only('name', 'description', 'category', 'price', 'stok');
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
@@ -51,12 +52,13 @@ class ProdukController extends Controller
         $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'category'    => 'nullable|string|max:100',
             'price'       => 'required|numeric|min:0',
             'stok'        => 'required|integer|min:0',
             'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $data = $request->only('name', 'description', 'price', 'stok');
+        $data = $request->only('name', 'description', 'category', 'price', 'stok');
 
         if ($request->hasFile('image')) {
             // Hapus gambar lama jika ada
