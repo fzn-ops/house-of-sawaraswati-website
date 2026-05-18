@@ -5,76 +5,97 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ProdukController extends Controller
 {
-    // getProduk() : Product (list semua produk)
     public function index()
     {
-        $products = Product::all();
+        $products = Product::with('sizes')->orderByDesc('product_id')->paginate(24)->withQueryString();
         return view('admin.produk', compact('products'));
     }
 
-    // getDetailProduk() : Product
     public function show(Product $product)
     {
+        $product->load('sizes');
         return response()->json($product);
     }
 
-    // tambahProduk() : void
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category'    => 'nullable|string|max:100',
-            'price'       => 'required|numeric|min:0',
-            'stok'        => 'required|integer|min:0',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'name'          => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'category'      => 'nullable|string|max:100',
+            'price'         => 'required|numeric|min:0',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'sizes'         => 'required|array|min:1',
+            'sizes.*.size'  => 'required|string|max:50',
+            'sizes.*.stok'  => 'required|integer|min:0',
         ]);
 
-        $data = $request->only('name', 'description', 'category', 'price', 'stok');
+        $sizes = $this->normalizeSizes($request->input('sizes', []));
+
+        if (empty($sizes)) {
+            return back()->withInput()->with('error', 'Minimal satu size harus diisi.');
+        }
+
+        $data = $request->only('name', 'description', 'category', 'price');
+        $data['stok'] = array_sum(array_column($sizes, 'stok'));
 
         if ($request->hasFile('image')) {
             $data['image'] = $request->file('image')->store('products', 'public');
         }
 
-        Product::create($data);
+        DB::transaction(function () use ($data, $sizes) {
+            $product = Product::create($data);
+            $product->sizes()->createMany($sizes);
+        });
 
         return redirect()->route('admin.produk')
             ->with('success', 'Produk berhasil ditambahkan.');
     }
 
-    // ubahProduk() : void
     public function update(Request $request, Product $product)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category'    => 'nullable|string|max:100',
-            'price'       => 'required|numeric|min:0',
-            'stok'        => 'required|integer|min:0',
-            'image'       => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'name'          => 'required|string|max:255',
+            'description'   => 'nullable|string',
+            'category'      => 'nullable|string|max:100',
+            'price'         => 'required|numeric|min:0',
+            'image'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'sizes'         => 'required|array|min:1',
+            'sizes.*.size'  => 'required|string|max:50',
+            'sizes.*.stok'  => 'required|integer|min:0',
         ]);
 
-        $data = $request->only('name', 'description', 'category', 'price', 'stok');
+        $sizes = $this->normalizeSizes($request->input('sizes', []));
+
+        if (empty($sizes)) {
+            return back()->withInput()->with('error', 'Minimal satu size harus diisi.');
+        }
+
+        $data = $request->only('name', 'description', 'category', 'price');
+        $data['stok'] = array_sum(array_column($sizes, 'stok'));
 
         if ($request->hasFile('image')) {
-            // Hapus gambar lama jika ada
             if ($product->image) {
                 Storage::disk('public')->delete($product->image);
             }
             $data['image'] = $request->file('image')->store('products', 'public');
         }
 
-        $product->update($data);
+        DB::transaction(function () use ($product, $data, $sizes) {
+            $product->update($data);
+            $product->sizes()->delete();
+            $product->sizes()->createMany($sizes);
+        });
 
         return redirect()->route('admin.produk')
             ->with('success', 'Produk berhasil diperbarui.');
     }
 
-    // hapusProduk() : void
     public function destroy(Product $product)
     {
         if ($product->image) {
@@ -86,16 +107,22 @@ class ProdukController extends Controller
             ->with('success', 'Produk berhasil dihapus.');
     }
 
-    // updateStok() : void
-    public function updateStok(Request $request, Product $product)
+    private function normalizeSizes(array $rawSizes): array
     {
-        $request->validate([
-            'stok' => 'required|integer|min:0',
-        ]);
+        $merged = [];
+        foreach ($rawSizes as $row) {
+            $size = trim((string) ($row['size'] ?? ''));
+            $stok = (int) ($row['stok'] ?? 0);
+            if ($size === '') {
+                continue;
+            }
+            $merged[$size] = ($merged[$size] ?? 0) + $stok;
+        }
 
-        $product->update(['stok' => $request->stok]);
-
-        return redirect()->route('admin.produk')
-            ->with('success', 'Stok produk berhasil diperbarui.');
+        $result = [];
+        foreach ($merged as $size => $stok) {
+            $result[] = ['size' => $size, 'stok' => $stok];
+        }
+        return $result;
     }
 }

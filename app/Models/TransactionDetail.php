@@ -10,7 +10,7 @@ class TransactionDetail extends Model
     protected $primaryKey = 'detail_id';
 
     protected $fillable = [
-        'transaction_id', 'product_id', 'quantity', 'price', 'subtotal'
+        'transaction_id', 'product_id', 'size', 'quantity', 'price', 'subtotal'
     ];
 
     public function transaction()

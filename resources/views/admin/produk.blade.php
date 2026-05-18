@@ -16,17 +16,24 @@
         {{ session('error') }}
     </div>
     @endif
+    @if($errors->any())
+    <div class="mb-4 px-4 py-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-xl text-sm text-rose-600 dark:text-rose-400">
+        <ul class="list-disc list-inside">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
 
-    {{-- Sub header + tombol tambah --}}
     <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
-        <p class="text-sm font-semibold text-charcoal dark:text-gray-100">Total: {{ $products->count() }} produk</p>
+        <p class="text-sm font-semibold text-charcoal dark:text-gray-100">Total: {{ $products->total() }} produk</p>
         <button onclick="openModal()"
                 class="px-5 py-2 bg-rose-500 text-white text-sm font-semibold rounded-xl hover:bg-rose-600 transition-colors">
             Tambah Produk
         </button>
     </div>
 
-    {{-- Grid Produk --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" id="produk-grid">
         @forelse ($products as $p)
         <div class="produk-card bg-white dark:bg-[#1e1e21] rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-700 transition-all duration-200"
@@ -35,7 +42,8 @@
              data-price="{{ $p->price }}"
              data-stok="{{ $p->stok }}"
              data-desc="{{ $p->description }}"
-             data-category="{{ $p->category }}">
+             data-category="{{ $p->category }}"
+             data-sizes='@json($p->sizes->map(fn($s) => ["size" => $s->size, "stok" => $s->stok])->values())'>
             <div class="bg-gray-50 dark:bg-[#252528] overflow-hidden">
                 @if($p->image)
                 <img src="{{ asset('storage/' . $p->image) }}"
@@ -52,13 +60,23 @@
             <div class="p-3">
                 <p class="prod-name text-sm font-medium text-charcoal dark:text-gray-100 truncate">{{ $p->name }}</p>
                 <p class="prod-price text-xs text-gray-500 dark:text-gray-400 mt-0.5">Rp{{ number_format($p->price, 0, ',', '.') }}</p>
-                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Stok: {{ $p->stok }}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Stok total: {{ $p->stok }}</p>
+                @if($p->sizes->isNotEmpty())
+                <div class="flex flex-wrap gap-1 mt-1">
+                    @foreach($p->sizes as $s)
+                    <span class="px-1.5 py-0.5 text-[10px] rounded-md bg-rose-50 dark:bg-rose-900/20 text-rose-500 dark:text-rose-400">
+                        {{ $s->size }}: {{ $s->stok }}
+                    </span>
+                    @endforeach
+                </div>
+                @endif
                 <div class="flex gap-1 mt-2">
                     <button onclick="openEditModal({{ $p->product_id }})"
                             class="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 hover:border-rose-400 dark:hover:border-rose-500 hover:text-rose-500 transition-all">
                         Edit
                     </button>
-                    <form method="POST" action="{{ route('admin.produk.destroy', $p->product_id) }}" onsubmit="return confirm('Hapus produk ini?')">
+                    <form method="POST" action="{{ route('admin.produk.destroy', $p->product_id) }}"
+                          onsubmit="return confirmDeleteForm(this, {title: 'Hapus produk?', text: '{{ $p->name }} akan dihapus dari katalog.'})">
                         @csrf @method('DELETE')
                         <button type="submit" class="px-2 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400 hover:border-red-400 dark:hover:border-red-500 hover:text-red-500 transition-all">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,6 +93,12 @@
         </div>
         @endforelse
     </div>
+
+    @if ($products->hasPages())
+    <div class="mt-6">
+        {{ $products->links() }}
+    </div>
+    @endif
 
     {{-- ===================== MODAL TAMBAH ===================== --}}
     <div id="modal-overlay"
@@ -99,21 +123,26 @@
                         <input type="text" name="name" required placeholder="cth. Alcy Set - Khimar"
                                class="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Harga <span class="text-rose-400">*</span></label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500">Rp</span>
-                                <input type="number" name="price" required placeholder="0"
-                                       class="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Stok <span class="text-rose-400">*</span></label>
-                            <input type="number" name="stok" required placeholder="0" min="0"
-                                   class="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Harga <span class="text-rose-400">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500">Rp</span>
+                            <input type="number" name="price" required placeholder="0"
+                                   class="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors">
                         </div>
                     </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400">Size & Stok <span class="text-rose-400">*</span></label>
+                            <button type="button" onclick="addSizeRow('add-size-list')"
+                                    class="text-xs font-medium text-rose-500 hover:text-rose-600 transition-colors">
+                                + Tambah Size
+                            </button>
+                        </div>
+                        <div id="add-size-list" class="space-y-2"></div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Deskripsi</label>
                         <textarea name="description" rows="3" placeholder="Deskripsikan produk..."
@@ -173,21 +202,26 @@
                         <input type="text" name="name" id="edit-name" required
                                class="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Harga <span class="text-rose-400">*</span></label>
-                            <div class="relative">
-                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500">Rp</span>
-                                <input type="number" name="price" id="edit-price" required
-                                       class="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Stok <span class="text-rose-400">*</span></label>
-                            <input type="number" name="stok" id="edit-stok" required min="0"
-                                   class="w-full px-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Harga <span class="text-rose-400">*</span></label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 dark:text-gray-500">Rp</span>
+                            <input type="number" name="price" id="edit-price" required
+                                   class="w-full pl-9 pr-3 py-2.5 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors">
                         </div>
                     </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400">Size & Stok <span class="text-rose-400">*</span></label>
+                            <button type="button" onclick="addSizeRow('edit-size-list')"
+                                    class="text-xs font-medium text-rose-500 hover:text-rose-600 transition-colors">
+                                + Tambah Size
+                            </button>
+                        </div>
+                        <div id="edit-size-list" class="space-y-2"></div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Deskripsi</label>
                         <textarea name="description" id="edit-description" rows="3"
@@ -226,7 +260,84 @@
 
     @push('scripts')
     <script>
+        const SIZE_OPTIONS = ['S', 'M', 'L', 'XL', 'XXL', 'All Size'];
+
+        function reindexSizeList(listId) {
+            const list = document.getElementById(listId);
+            Array.from(list.children).forEach((row, idx) => {
+                const sel = row.querySelector('select');
+                const inp = row.querySelector('input[type="number"]');
+                if (sel) sel.name = `sizes[${idx}][size]`;
+                if (inp) inp.name = `sizes[${idx}][stok]`;
+            });
+        }
+
+        function buildSizeRow(size = '', stok = 0) {
+            const wrap = document.createElement('div');
+            wrap.className = 'flex gap-2 items-center';
+
+            const select = document.createElement('select');
+            select.required = true;
+            select.className = 'flex-1 px-3 py-2 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 dark:text-gray-100 transition-colors';
+
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Pilih Size';
+            select.appendChild(placeholder);
+
+            SIZE_OPTIONS.forEach(opt => {
+                const o = document.createElement('option');
+                o.value = opt;
+                o.textContent = opt;
+                if (opt === size) o.selected = true;
+                select.appendChild(o);
+            });
+
+            const stokInput = document.createElement('input');
+            stokInput.type = 'number';
+            stokInput.required = true;
+            stokInput.min = '0';
+            stokInput.placeholder = 'Stok';
+            stokInput.value = stok;
+            stokInput.className = 'w-24 px-3 py-2 text-sm bg-gray-50 dark:bg-[#252528] border border-gray-300 dark:border-gray-600 shadow-inner rounded-xl focus:bg-white dark:focus:bg-[#1e1e21] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-400 placeholder-gray-300 dark:placeholder-gray-600 transition-colors';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'p-2 text-gray-400 hover:text-rose-500 transition-colors';
+            removeBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>';
+            removeBtn.onclick = () => {
+                const list = wrap.parentElement;
+                wrap.remove();
+                if (list) {
+                    if (list.children.length === 0) {
+                        list.appendChild(buildSizeRow());
+                    }
+                    reindexSizeList(list.id);
+                }
+            };
+
+            wrap.appendChild(select);
+            wrap.appendChild(stokInput);
+            wrap.appendChild(removeBtn);
+            return wrap;
+        }
+
+        function addSizeRow(listId) {
+            const list = document.getElementById(listId);
+            list.appendChild(buildSizeRow());
+            reindexSizeList(listId);
+        }
+
+        function resetSizeList(listId, sizes) {
+            const list = document.getElementById(listId);
+            list.innerHTML = '';
+            const rows = (sizes && sizes.length) ? sizes : [{ size: '', stok: 0 }];
+            rows.forEach(r => list.appendChild(buildSizeRow(r.size, r.stok)));
+            reindexSizeList(listId);
+        }
+
         function openModal() {
+            resetSizeList('add-size-list', []);
             document.getElementById('modal-overlay').classList.remove('hidden');
             document.getElementById('modal-overlay').classList.add('flex');
         }
@@ -234,14 +345,19 @@
             document.getElementById('modal-overlay').classList.add('hidden');
             document.getElementById('modal-overlay').classList.remove('flex');
         }
+
         function openEditModal(id) {
             const card = document.querySelector(`[data-id="${id}"]`);
             if (!card) return;
             document.getElementById('edit-name').value = card.dataset.name;
             document.getElementById('edit-price').value = card.dataset.price;
-            document.getElementById('edit-stok').value = card.dataset.stok;
             document.getElementById('edit-description').value = card.dataset.desc || '';
             document.getElementById('edit-category').value = card.dataset.category || '';
+
+            let sizes = [];
+            try { sizes = JSON.parse(card.dataset.sizes || '[]'); } catch (e) { sizes = []; }
+            resetSizeList('edit-size-list', sizes);
+
             document.getElementById('edit-form').action = `/admin/produk/${id}`;
             document.getElementById('edit-modal-overlay').classList.remove('hidden');
             document.getElementById('edit-modal-overlay').classList.add('flex');

@@ -17,14 +17,14 @@ class TransactionController extends Controller
     // getTransaksi() : Transaction (tampilkan semua transaksi)
     public function index()
     {
-        $products = Product::where('stok', '>', 0)->get();
+        $products = Product::with('sizes')->where('stok', '>', 0)->get();
         return view('admin.pesanan', compact('products'));
     }
 
     // buatTransaksi() : void (form kasir)
     public function create()
     {
-        $products = Product::where('stok', '>', 0)->get();
+        $products = Product::with('sizes')->where('stok', '>', 0)->get();
         return view('admin.transaksi.create', compact('products'));
     }
 
@@ -35,15 +35,14 @@ class TransactionController extends Controller
             'payment_method'     => 'nullable|string',
             'items'              => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,product_id',
+            'items.*.size'       => 'nullable|string|max:50',
             'items.*.quantity'   => 'required|integer|min:1',
         ]);
 
         DB::beginTransaction();
         try {
-            // Generate unique order_id untuk Midtrans
             $orderId = 'HOS-' . time() . '-' . rand(1000, 9999);
 
-            // Buat transaksi baru
             $transaction = Transaction::create([
                 'order_id'         => $orderId,
                 'transaction_date' => Carbon::now(),
@@ -57,36 +56,45 @@ class TransactionController extends Controller
             $itemDetails = [];
 
             foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
+                $product = Product::with('sizes')->findOrFail($item['product_id']);
+                $size    = $item['size'] ?? null;
+                $qty     = (int) $item['quantity'];
 
-                // Cek stok cukup
-                if ($product->stok < $item['quantity']) {
-                    throw new \Exception("Stok {$product->name} tidak mencukupi.");
+                $sizeRow = $size
+                    ? $product->sizes->firstWhere('size', $size)
+                    : null;
+
+                if ($sizeRow) {
+                    if ($sizeRow->stok < $qty) {
+                        throw new \Exception("Stok {$product->name} ({$size}) tidak mencukupi.");
+                    }
+                } else {
+                    if ($product->stok < $qty) {
+                        throw new \Exception("Stok {$product->name} tidak mencukupi.");
+                    }
                 }
 
-                // hitungSubtotal() : decimal
-                $subtotal = $product->price * $item['quantity'];
+                $subtotal = $product->price * $qty;
                 $totalPrice += $subtotal;
 
-                // tambahItem() : void
                 TransactionDetail::create([
                     'transaction_id' => $transaction->transaction_id,
                     'product_id'     => $product->product_id,
-                    'quantity'       => $item['quantity'],
+                    'size'           => $size,
+                    'quantity'       => $qty,
                     'price'          => $product->price,
                     'subtotal'       => $subtotal,
                 ]);
 
-                // Siapkan item detail untuk Midtrans
+                $itemName = $size ? "{$product->name} ({$size})" : $product->name;
                 $itemDetails[] = [
                     'id'       => (string) $product->product_id,
                     'price'    => (int) $product->price,
-                    'quantity' => (int) $item['quantity'],
-                    'name'     => substr($product->name, 0, 50),
+                    'quantity' => $qty,
+                    'name'     => substr($itemName, 0, 50),
                 ];
             }
 
-            // hitungTotal() : decimal
             $transaction->update(['total_price' => $totalPrice]);
 
             // ===== MIDTRANS SNAP TOKEN =====
@@ -250,13 +258,13 @@ class TransactionController extends Controller
     // getTransaksi() : Transaction (detail satu transaksi)
     public function show(Transaction $transaction)
     {
-        $transaction->load(['user', 'transactionDetails.product']);
+        $transaction->load(['user', 'transactionDetails.product' => fn($q) => $q->withTrashed()]);
         return response()->json($transaction);
     }
 
     public function laporanHarian(Request $request)
     {
-        $query = Transaction::with(['user', 'transactionDetails.product'])
+        $query = Transaction::with(['user', 'transactionDetails.product' => fn($q) => $q->withTrashed()])
             ->orderBy('transaction_date', 'desc');
 
         if ($request->has('date') && $request->get('date') != '') {
@@ -273,7 +281,7 @@ class TransactionController extends Controller
                 'produk'  => $tr->transactionDetails->map(function ($detail) {
                     return [
                         'nama'   => $detail->product ? $detail->product->name : 'Produk Terhapus',
-                        'ukuran' => 'All Size',
+                        'ukuran' => $detail->size ?? 'All Size',
                         'qty'    => $detail->quantity
                     ];
                 })->toArray(),
@@ -295,7 +303,7 @@ class TransactionController extends Controller
         $month = $request->get('month', Carbon::now()->month);
         $year  = $request->get('year', Carbon::now()->year);
 
-        $transactions = Transaction::with(['user', 'transactionDetails.product'])
+        $transactions = Transaction::with(['user', 'transactionDetails.product' => fn($q) => $q->withTrashed()])
             ->whereMonth('transaction_date', $month)
             ->whereYear('transaction_date', $year)
             ->orderBy('transaction_date', 'desc')
@@ -322,12 +330,21 @@ class TransactionController extends Controller
 
     private function decrementStock(Transaction $transaction)
     {
-        $transaction->load('transactionDetails.product');
+        $transaction->load('transactionDetails.product.sizes');
 
         foreach ($transaction->transactionDetails as $detail) {
-            if ($detail->product) {
-                $detail->product->decrement('stok', $detail->quantity);
+            if (!$detail->product) {
+                continue;
             }
+
+            if ($detail->size) {
+                $sizeRow = $detail->product->sizes->firstWhere('size', $detail->size);
+                if ($sizeRow) {
+                    $sizeRow->decrement('stok', $detail->quantity);
+                }
+            }
+
+            $detail->product->decrement('stok', $detail->quantity);
         }
     }
 }

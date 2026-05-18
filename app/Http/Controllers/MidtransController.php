@@ -88,12 +88,21 @@ class MidtransController extends Controller
      */
     private function restoreStock(Transaction $transaction)
     {
-        $transaction->load('transactionDetails.product');
+        $transaction->load('transactionDetails.product.sizes');
 
         foreach ($transaction->transactionDetails as $detail) {
-            if ($detail->product) {
-                $detail->product->increment('stok', $detail->quantity);
+            if (!$detail->product) {
+                continue;
             }
+
+            if ($detail->size) {
+                $sizeRow = $detail->product->sizes->firstWhere('size', $detail->size);
+                if ($sizeRow) {
+                    $sizeRow->increment('stok', $detail->quantity);
+                }
+            }
+
+            $detail->product->increment('stok', $detail->quantity);
         }
 
         Log::info("Stock restored for order: {$transaction->order_id}");
@@ -101,12 +110,21 @@ class MidtransController extends Controller
 
     private function decrementStock(Transaction $transaction)
     {
-        $transaction->load('transactionDetails.product');
+        $transaction->load('transactionDetails.product.sizes');
 
         foreach ($transaction->transactionDetails as $detail) {
-            if ($detail->product) {
-                $detail->product->decrement('stok', $detail->quantity);
+            if (!$detail->product) {
+                continue;
             }
+
+            if ($detail->size) {
+                $sizeRow = $detail->product->sizes->firstWhere('size', $detail->size);
+                if ($sizeRow) {
+                    $sizeRow->decrement('stok', $detail->quantity);
+                }
+            }
+
+            $detail->product->decrement('stok', $detail->quantity);
         }
 
         Log::info("Stock decremented for order: {$transaction->order_id}");

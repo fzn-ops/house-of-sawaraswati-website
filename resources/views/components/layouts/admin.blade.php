@@ -25,6 +25,37 @@
     @php $midtransClientKey = config('midtrans.client_key'); @endphp
     <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ $midtransClientKey }}"></script>
 
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script>
+        function confirmDelete(options) {
+            const opts = Object.assign({
+                title: 'Hapus data?',
+                text: 'Data yang dihapus tidak dapat dikembalikan.',
+                confirmButtonText: 'Ya, hapus',
+                cancelButtonText: 'Batal',
+            }, options || {});
+            return Swal.fire({
+                title: opts.title,
+                text: opts.text,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f43f5e',
+                cancelButtonColor: '#9ca3af',
+                confirmButtonText: opts.confirmButtonText,
+                cancelButtonText: opts.cancelButtonText,
+                reverseButtons: true,
+            });
+        }
+
+        function confirmDeleteForm(form, options) {
+            confirmDelete(options).then((result) => {
+                if (result.isConfirmed) form.submit();
+            });
+            return false;
+        }
+    </script>
+
     @stack('styles')
 </head>
 <body class="bg-[#f7f5f3] dark:bg-[#111113] text-[#2c2c2c] dark:text-gray-200">

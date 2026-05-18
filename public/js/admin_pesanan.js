@@ -45,13 +45,16 @@ function selectSize(id, ukuran, stok) {
     const price = parseInt(card?.dataset.price) || 0;
     const image = card?.dataset.image || '';
 
-    // Key unik per produk+ukuran
     const key = `${id}_${ukuran}`;
 
     if (orderItems[key]) {
+        if (orderItems[key].qty >= stok) {
+            showToast(`Stok ${name} (${ukuran}) hanya ${stok}.`, 'error');
+            return;
+        }
         orderItems[key].qty += 1;
     } else {
-        orderItems[key] = { id, key, name, price, image, ukuran, qty: 1 };
+        orderItems[key] = { id, key, name, price, image, ukuran, stok, qty: 1 };
     }
 
     updateActionButton(id);
@@ -132,8 +135,13 @@ function decreaseQty(key) {
 
 function increaseQty(key) {
     if (!orderItems[key]) return;
-    orderItems[key].qty += 1;
-    updateActionButton(orderItems[key].id);
+    const item = orderItems[key];
+    if (item.stok !== undefined && item.qty >= item.stok) {
+        showToast(`Stok ${item.name} (${item.ukuran}) hanya ${item.stok}.`, 'error');
+        return;
+    }
+    item.qty += 1;
+    updateActionButton(item.id);
     renderOrderSummary();
 }
 
@@ -437,6 +445,7 @@ function tambahkanPesanan() {
         payment_method: selectedPayment,
         items: items.map(i => ({
             product_id: i.id,
+            size: i.ukuran,
             quantity: i.qty
         }))
     };

@@ -44,7 +44,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/produk/{product}',     [ProdukController::class, 'show'])->name('produk.show');
         Route::put('/produk/{product}',     [ProdukController::class, 'update'])->name('produk.update');
         Route::delete('/produk/{product}',  [ProdukController::class, 'destroy'])->name('produk.destroy');
-        Route::patch('/produk/{product}/stok', [ProdukController::class, 'updateStok'])->name('produk.updateStok');
 
         // Company Profile
         Route::get('/company-profile',          [CompanyProfileController::class, 'index'])->name('company-profile');

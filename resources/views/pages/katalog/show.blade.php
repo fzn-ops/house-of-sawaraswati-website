@@ -32,16 +32,26 @@
                 {{-- Ukuran --}}
                 <div class="mb-6">
                     <h2 class="font-display text-lg font-semibold text-charcoal mb-3">Ukuran</h2>
-                    <div class="flex flex-wrap gap-2">
-                        @php $sizes = $product['sizes'] ?? ['Size 1', 'Size 2']; @endphp
-                        @foreach ($sizes as $size)
+                    <div class="flex flex-wrap gap-2" id="size-list">
+                        @php
+                            $sizes = $product->sizes ?? collect();
+                        @endphp
+                        @forelse ($sizes as $sz)
+                        @php $available = $sz->stok > 0; @endphp
                         <button
+                            type="button"
+                            @disabled(!$available)
                             onclick="selectSize(this)"
-                            class="size-btn px-4 py-1.5 text-sm border border-gray-300 rounded text-charcoal hover:border-rose-400 hover:text-rose-500 transition-colors">
-                            {{ $size }}
+                            data-size="{{ $sz->size }}"
+                            class="size-btn px-4 py-1.5 text-sm border rounded transition-colors
+                                {{ $available ? 'border-gray-300 text-charcoal hover:border-rose-400 hover:text-rose-500' : 'border-gray-200 text-gray-300 line-through cursor-not-allowed' }}">
+                            {{ $sz->size }}
                         </button>
-                        @endforeach
+                        @empty
+                        <span class="text-sm text-gray-400">Ukuran belum tersedia.</span>
+                        @endforelse
                     </div>
+                    <p id="size-hint" class="text-xs text-gray-400 mt-2 hidden">Pilih ukuran dulu sebelum memesan.</p>
                 </div>
 
                 {{-- Status --}}
@@ -53,12 +63,15 @@
                 </div>
 
                 {{-- Tombol Pesan --}}
-                <a
-                    href="https://wa.me/6281211882222?text=Halo, saya ingin memesan {{ urlencode($product->name) }}"
-                    target="_blank"
+                <button
+                    type="button"
+                    id="btn-pesan-wa"
+                    data-product-name="{{ $product->name }}"
+                    data-has-sizes="{{ $sizes->isNotEmpty() ? '1' : '0' }}"
+                    onclick="pesanViaWhatsApp(this)"
                     class="block w-full text-center py-3 bg-rose-500 text-white text-sm font-medium rounded hover:bg-rose-600 transition-colors mb-8">
                     Pesan via WhatsApp
-                </a>
+                </button>
 
                 {{-- Deskripsi Produk --}}
                 <div class="mb-5">

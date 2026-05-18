@@ -28,7 +28,8 @@ class FrontendController extends Controller
 
     public function show(Product $product)
     {
-        // Get related products (produk lain untuk rekomendasi)
+        $product->load('sizes');
+
         $relatedProducts = Product::where('product_id', '!=', $product->product_id)
             ->inRandomOrder()
             ->take(4)

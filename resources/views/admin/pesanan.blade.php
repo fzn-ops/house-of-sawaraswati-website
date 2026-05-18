@@ -18,7 +18,7 @@
 
             {{-- Filter Tabs --}}
             <div class="flex gap-2 mb-5 flex-wrap">
-                @php $tabs = ['Semua Produk', 'Hijab', 'Gamis', 'Aksesoris']; @endphp
+                @php $tabs = ['Semua Produk', 'Gamis Polos', 'Gamis Motif', 'Gamis Set', 'Kerudung']; @endphp
                 @foreach ($tabs as $i => $tab)
                 <button onclick="filterTab(this, '{{ $tab }}')"
                         class="tab-btn flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200
@@ -33,14 +33,17 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="admin-product-grid">
                 @foreach ($products as $product)
                 @php
-                    $variants = [['ukuran' => 'All Size', 'stok' => $product->stok]];
+                    $variants = $product->sizes->map(fn($s) => ['ukuran' => $s->size, 'stok' => $s->stok])->values()->all();
+                    if (empty($variants)) {
+                        $variants = [['ukuran' => 'All Size', 'stok' => $product->stok]];
+                    }
                     $imagePath = $product->image ? asset('storage/' . $product->image) : asset('images/hero_image.png');
                 @endphp
                 <div class="admin-product-card relative bg-white dark:bg-[#1e1e21] rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-rose-200 transition-all duration-200"
                      data-id="{{ $product->product_id }}"
                      data-name="{{ $product->name }}"
                      data-price="{{ $product->price }}"
-                     data-kategori="Umum"
+                     data-kategori="{{ $product->category ?? '' }}"
                      data-image="{{ $imagePath }}"
                      data-variants='{{ json_encode($variants) }}'>
 

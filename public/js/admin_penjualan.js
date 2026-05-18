@@ -269,13 +269,19 @@ function editRow(index) {
 
 // ===== HAPUS =====
 function deleteRow(index) {
-    if (!confirm('Hapus data ini?')) return;
-    const item  = filteredData[index];
-    allData      = allData.filter(r => r.id !== item.id);
-    filteredData = filteredData.filter(r => r.id !== item.id);
-    if ((currentPage - 1) * PER_PAGE >= filteredData.length && currentPage > 1) currentPage--;
-    renderTable();
-    showToast('Data berhasil dihapus!', 'success');
+    const item = filteredData[index];
+    if (!item) return;
+    confirmDelete({
+        title: 'Hapus data?',
+        text: `Transaksi ${item.id} akan dihapus dari tabel.`,
+    }).then((result) => {
+        if (!result.isConfirmed) return;
+        allData      = allData.filter(r => r.id !== item.id);
+        filteredData = filteredData.filter(r => r.id !== item.id);
+        if ((currentPage - 1) * PER_PAGE >= filteredData.length && currentPage > 1) currentPage--;
+        renderTable();
+        showToast('Data berhasil dihapus!', 'success');
+    });
 }
 
 // ===== PRODUK ROW =====
