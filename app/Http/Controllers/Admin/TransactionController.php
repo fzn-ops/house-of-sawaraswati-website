@@ -103,7 +103,17 @@ class TransactionController extends Controller
 
             // Hanya generate snap token jika metode pembayaran bukan COD/Tunai
             if ($paymentMethod !== 'cod') {
-                $snapToken = $this->generateSnapToken($transaction, $itemDetails, $totalPrice, $paymentMethod);
+                $pajak = (int) round($totalPrice * 0.01);
+                $grossAmount = $totalPrice + $pajak;
+
+                $itemDetails[] = [
+                    'id'       => 'TAX-1',
+                    'price'    => $pajak,
+                    'quantity' => 1,
+                    'name'     => 'Pajak (1%)',
+                ];
+
+                $snapToken = $this->generateSnapToken($transaction, $itemDetails, $grossAmount, $paymentMethod);
                 $transaction->update(['snap_token' => $snapToken]);
             } else {
                 // Pembayaran tunai langsung paid — potong stok sekarang
@@ -285,9 +295,11 @@ class TransactionController extends Controller
                         'qty'    => $detail->quantity
                     ];
                 })->toArray(),
-                'total'   => $tr->total_price,
-                'metode'  => self::formatPaymentMethod($tr->payment_method),
-                'status'  => $tr->payment_status ?? 'paid',
+                'total'      => $tr->total_price,
+                'metode'     => self::formatPaymentMethod($tr->payment_method),
+                'status'     => $tr->payment_status ?? 'paid',
+                'snap_token' => $tr->snap_token,
+                'order_id'   => $tr->order_id,
             ];
         });
 
