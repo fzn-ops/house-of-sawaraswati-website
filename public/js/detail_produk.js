@@ -1,6 +1,6 @@
 // public/js/detail-produk.js
 
-const WA_NUMBER = '6281211882222';
+const WA_NUMBER = '6282114687773';
 let selectedSize = null;
 
 function selectSize(btn) {

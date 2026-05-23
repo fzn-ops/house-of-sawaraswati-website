@@ -41,7 +41,7 @@
                         </div>
                         <div>
                             <h3 class="font-semibold text-lg mb-1">WhatsApp</h3>
-                            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $profile->phone ?? '6281211882222') }}" target="_blank" class="text-rose-500 hover:text-rose-600 text-sm transition-colors">{{ $profile->phone ?? '+62 812-1188-2222' }}</a>
+                            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $profile->phone ?? '6282114687773') }}" target="_blank" class="text-rose-500 hover:text-rose-600 text-sm transition-colors">{{ $profile->phone ?? '+62 821-1468-7773' }}</a>
                         </div>
                     </div>
 

@@ -43,7 +43,7 @@
             <div>
                 <h4 class="font-semibold text-white text-sm mb-2">Kontak</h4>
                 <div class="space-y-1 text-sm text-gray-300">
-                    <p>+62 812 1188 2222</p>
+                    <p>+62 821 1468 7773</p>
                     <a href="mailto:houseofsaraswati@gmail.com"
                        class="flex items-center gap-1 hover:text-white transition-colors">
                         houseofsaraswati@gmail.com
