@@ -366,10 +366,10 @@ function formatRp(n) {
 function filterTab(btn, tab) {
     document.querySelectorAll('.tab-btn').forEach(b => {
         b.classList.remove('bg-rose-500', 'text-white');
-        b.classList.add('bg-white', 'text-gray-500', 'border', 'border-gray-200');
+        b.classList.add('bg-white', 'dark:bg-[#1e1e21]', 'text-gray-500', 'dark:text-gray-400', 'border', 'border-gray-200', 'dark:border-gray-700');
     });
     btn.classList.add('bg-rose-500', 'text-white');
-    btn.classList.remove('bg-white', 'text-gray-500', 'border', 'border-gray-200');
+    btn.classList.remove('bg-white', 'dark:bg-[#1e1e21]', 'text-gray-500', 'dark:text-gray-400', 'border', 'border-gray-200', 'dark:border-gray-700');
 
     document.querySelectorAll('.admin-product-card').forEach(card => {
         const match = tab === 'Semua Produk' || card.dataset.kategori === tab;
@@ -393,7 +393,7 @@ function showToast(msg, type = 'success') {
     const isError = type === 'error';
     const toast = document.createElement('div');
     toast.id        = 'success-toast';
-    toast.className = `fixed top-22 right-2 z-[100] flex items-center gap-3 bg-white dark:bg-[#1e1e21] border shadow-lg rounded-2xl px-6 py-4 transition-all duration-500 opacity-0 -translate-y-4 ${isError ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}`;
+    toast.className = `fixed top-6 right-8 z-[9999] flex items-center gap-3 bg-white dark:bg-[#1e1e21] border shadow-lg rounded-2xl px-6 py-4 transition-all duration-500 opacity-0 -translate-y-4 ${isError ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}`;
     toast.innerHTML = `
         <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isError ? 'bg-red-100' : 'bg-green-100'}">
             ${isError
@@ -416,18 +416,16 @@ function showToast(msg, type = 'success') {
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             toast.style.opacity = '1';
-            toast.style.transform = 'translateX(-10%) translateY(0)';
+            toast.style.transform = 'translateY(0)';
             toast.querySelector('path').style.strokeDashoffset = '0';
-            // Animasi centang
             const path = toast.querySelector('.check-path');
             if (path) path.style.strokeDashoffset = '0';
         });
     });
 
-    // Animasi keluar setelah 2.8 detik
     setTimeout(() => {
         toast.style.opacity     = '0';
-        toast.style.transform   = 'translateX(-10%) translateY(16px)';
+        toast.style.transform   = 'translateY(-16px)';
         setTimeout(() => toast.remove(), 500);
     }, 2800);
 }

@@ -213,6 +213,11 @@ class TransactionController extends Controller
                 'first_name' => Auth::user()->name ?? 'Customer',
                 'email'      => Auth::user()->email ?? 'customer@houseofsaraswati.com',
             ],
+            'callbacks' => [
+                'finish'   => url('/admin/kasir'),
+                'error'    => url('/admin/kasir'),
+                'unfinish' => url('/admin/kasir'),
+            ],
         ];
 
         // Filter enabled_payments berdasarkan metode yang dipilih di POS

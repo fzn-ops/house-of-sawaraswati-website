@@ -380,3 +380,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tambah varian default saat load
     addVariant();
 });
+
+// ===== SEARCH & FILTER =====
+let activeProdukTab = 'Semua Produk';
+
+document.getElementById('produk-search')?.addEventListener('input', function () {
+    applyProdukFilter();
+});
+
+function filterProdukTab(btn, tab) {
+    document.querySelectorAll('.produk-tab-btn').forEach(b => {
+        b.classList.remove('bg-rose-500', 'text-white');
+        b.classList.add('bg-white', 'dark:bg-[#1e1e21]', 'text-gray-500', 'dark:text-gray-400', 'border', 'border-gray-200', 'dark:border-gray-700');
+    });
+    btn.classList.add('bg-rose-500', 'text-white');
+    btn.classList.remove('bg-white', 'dark:bg-[#1e1e21]', 'text-gray-500', 'dark:text-gray-400', 'border', 'border-gray-200', 'dark:border-gray-700');
+
+    activeProdukTab = tab;
+    applyProdukFilter();
+}
+
+function applyProdukFilter() {
+    const q = (document.getElementById('produk-search')?.value || '').toLowerCase();
+
+    document.querySelectorAll('.produk-card').forEach(card => {
+        const name = (card.dataset.name || '').toLowerCase();
+        const category = card.dataset.category || '';
+
+        const matchSearch = !q || name.includes(q);
+        const matchTab = activeProdukTab === 'Semua Produk' || category === activeProdukTab;
+
+        card.classList.toggle('hidden', !(matchSearch && matchTab));
+    });
+}

@@ -74,7 +74,7 @@
             @php
                 $navItems = [
                     ['route' => 'admin.dashboard', 'check' => 'admin.dashboard', 'label' => 'Dashboard', 'icon' => 'M3 7h7v7H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 18h7v3H3z'],
-                    ['route' => 'admin.pesanan', 'check' => 'admin.pesanan|admin.transaksi.*', 'label' => 'Pesanan', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
+                    ['route' => 'admin.pesanan', 'check' => 'admin.pesanan|admin.transaksi.*', 'label' => 'Kasir', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
                     ['route' => 'admin.produk', 'check' => 'admin.produk*', 'label' => 'Produk', 'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
                     ['route' => 'admin.penjualan', 'check' => 'admin.penjualan*', 'label' => 'Penjualan', 'icon' => 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z'],
                 ];

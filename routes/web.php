@@ -51,8 +51,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/company-profile/profil',   [CompanyProfileController::class, 'updateProfil'])->name('company-profile.updateProfil');
         Route::put('/company-profile/kontak',   [CompanyProfileController::class, 'updateKontak'])->name('company-profile.updateKontak');
 
-        // Transaksi / Pesanan
-        Route::get('/pesanan',                  [TransactionController::class, 'index'])->name('pesanan');
+        // Kasir (POS)
+        Route::get('/kasir', [TransactionController::class, 'index'])->name('pesanan');
         Route::get('/transaksi/create',         [TransactionController::class, 'create'])->name('transaksi.create');
         Route::post('/transaksi',               [TransactionController::class, 'store'])->name('transaksi.store');
         Route::get('/transaksi/{transaction}',  [TransactionController::class, 'show'])->name('transaksi.show');

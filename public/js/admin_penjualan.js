@@ -63,18 +63,6 @@ function renderTable() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                             </svg>
                         </button>
-                        <button onclick="editRow(${start + i})" title="Edit"
-                                class="w-7 h-7 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-blue-500 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                            </svg>
-                        </button>
-                        <button onclick="deleteRow(${start + i})" title="Hapus"
-                                class="w-7 h-7 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-rose-500 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
-                        </button>
                     </div>
                 </td>
             </tr>`).join('')
@@ -493,7 +481,7 @@ function showToast(msg, type = 'success') {
     const isError = type === 'error';
     const toast   = document.createElement('div');
     toast.id        = 'toast-notif';
-    toast.className = `fixed top-24 right-6 z-[100] flex items-center gap-3 bg-white dark:bg-[#1e1e21] shadow-lg rounded-2xl px-6 py-4 transition-all duration-500 opacity-0 translate-x-16 border ${isError ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}`;
+    toast.className = `fixed top-6 right-8 z-[9999] flex items-center gap-3 bg-white dark:bg-[#1e1e21] shadow-lg rounded-2xl px-6 py-4 transition-all duration-500 opacity-0 -translate-y-4 border ${isError ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}`;
     toast.innerHTML = `
         <div class="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${isError ? 'bg-red-100' : 'bg-green-100'}">
             ${isError
@@ -513,13 +501,13 @@ function showToast(msg, type = 'success') {
     document.body.appendChild(toast);
     requestAnimationFrame(() => requestAnimationFrame(() => {
         toast.style.opacity   = '1';
-        toast.style.transform = 'translateX(0)';
+        toast.style.transform = 'translateY(0)';
         const path = toast.querySelector('[style]');
         if (path) path.style.strokeDashoffset = '0';
     }));
     setTimeout(() => {
         toast.style.opacity   = '0';
-        toast.style.transform = 'translateX(16px)';
+        toast.style.transform = 'translateY(-16px)';
         setTimeout(() => toast.remove(), 500);
     }, 2800);
 }

@@ -1,11 +1,11 @@
 {{-- resources/views/admin/pesanan.blade.php --}}
-<x-layouts.admin title="Pesanan">
+<x-layouts.admin title="Kasir">
 
     <div class="flex gap-6 items-start">
 
         {{-- ===== KIRI: Daftar Produk ===== --}}
         <div class="flex-1 min-w-0">
-            <h1 class="text-2xl font-bold text-charcoal dark:text-gray-100 mb-5">Pesanan</h1>
+            <h1 class="text-2xl font-bold text-charcoal dark:text-gray-100 mb-5">Kasir</h1>
 
             {{-- Search --}}
             <div class="relative mb-4">

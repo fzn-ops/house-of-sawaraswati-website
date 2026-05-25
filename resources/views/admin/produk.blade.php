@@ -34,6 +34,28 @@
         </button>
     </div>
 
+    {{-- Search --}}
+    <div class="relative mb-4">
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z"/>
+        </svg>
+        <input type="text" id="produk-search" placeholder="Cari produk"
+               class="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-[#1e1e21] border border-gray-200 dark:border-gray-700 rounded-xl text-sm focus:outline-none focus:border-rose-300 dark:focus:border-rose-500 placeholder-gray-400 dark:placeholder-gray-600">
+    </div>
+
+    {{-- Filter Tabs --}}
+    <div class="flex gap-2 mb-5 flex-wrap">
+        @php $tabs = ['Semua Produk', 'Gamis Polos', 'Gamis Motif', 'Gamis Set', 'Kerudung']; @endphp
+        @foreach ($tabs as $i => $tab)
+        <button onclick="filterProdukTab(this, '{{ $tab }}')"
+                class="produk-tab-btn flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200
+                {{ $i === 0 ? 'bg-rose-500 text-white' : 'bg-white dark:bg-[#1e1e21] text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-rose-300 dark:hover:border-rose-500 hover:text-rose-500' }}">
+            @if ($i > 0)<span class="w-2 h-2 rounded-full bg-current opacity-60"></span>@endif
+            {{ $tab }}
+        </button>
+        @endforeach
+    </div>
+
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" id="produk-grid">
         @forelse ($products as $p)
         <div class="produk-card bg-white dark:bg-[#1e1e21] rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-800 hover:border-rose-200 dark:hover:border-rose-700 transition-all duration-200"
@@ -365,6 +387,38 @@
         function closeEditModal() {
             document.getElementById('edit-modal-overlay').classList.add('hidden');
             document.getElementById('edit-modal-overlay').classList.remove('flex');
+        }
+
+        let activeProdukTab = 'Semua Produk';
+
+        document.getElementById('produk-search')?.addEventListener('input', function () {
+            applyProdukFilter();
+        });
+
+        function filterProdukTab(btn, tab) {
+            document.querySelectorAll('.produk-tab-btn').forEach(b => {
+                b.classList.remove('bg-rose-500', 'text-white');
+                b.classList.add('bg-white', 'dark:bg-[#1e1e21]', 'text-gray-500', 'dark:text-gray-400', 'border', 'border-gray-200', 'dark:border-gray-700');
+            });
+            btn.classList.add('bg-rose-500', 'text-white');
+            btn.classList.remove('bg-white', 'dark:bg-[#1e1e21]', 'text-gray-500', 'dark:text-gray-400', 'border', 'border-gray-200', 'dark:border-gray-700');
+
+            activeProdukTab = tab;
+            applyProdukFilter();
+        }
+
+        function applyProdukFilter() {
+            const q = (document.getElementById('produk-search')?.value || '').toLowerCase();
+
+            document.querySelectorAll('.produk-card').forEach(card => {
+                const name = (card.dataset.name || '').toLowerCase();
+                const category = card.dataset.category || '';
+
+                const matchSearch = !q || name.includes(q);
+                const matchTab = activeProdukTab === 'Semua Produk' || category === activeProdukTab;
+
+                card.classList.toggle('hidden', !(matchSearch && matchTab));
+            });
         }
     </script>
     @endpush
