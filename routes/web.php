@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProdukController;
 use App\Http\Controllers\Admin\CompanyProfileController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DiscountCodeController;
 use App\Http\Controllers\FrontendController;
 use App\Http\Controllers\MidtransController;
 use App\Http\Middleware\AdminMiddleware;
@@ -56,9 +57,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/transaksi',               [TransactionController::class, 'store'])->name('transaksi.store');
         Route::get('/transaksi/{transaction}',  [TransactionController::class, 'show'])->name('transaksi.show');
         Route::post('/transaksi/update-payment',  [TransactionController::class, 'updatePaymentStatus'])->name('transaksi.updatePayment');
+        Route::post('/transaksi/regenerate-token', [TransactionController::class, 'regenerateSnapToken'])->name('transaksi.regenerateToken');
 
         // Laporan Penjualan
         Route::get('/penjualan',                [TransactionController::class, 'laporanHarian'])->name('penjualan');
         Route::get('/penjualan/bulanan',        [TransactionController::class, 'laporanBulanan'])->name('penjualan.bulanan');
+
+        // Kode Diskon
+        Route::get('/discount-codes',              [DiscountCodeController::class, 'index'])->name('discount-codes');
+        Route::post('/discount-codes',             [DiscountCodeController::class, 'store'])->name('discount-codes.store');
+        Route::put('/discount-codes/{discountCode}',    [DiscountCodeController::class, 'update'])->name('discount-codes.update');
+        Route::patch('/discount-codes/{discountCode}/toggle', [DiscountCodeController::class, 'toggleActive'])->name('discount-codes.toggle');
+        Route::delete('/discount-codes/{discountCode}', [DiscountCodeController::class, 'destroy'])->name('discount-codes.destroy');
+        Route::get('/discount-codes/active',       [DiscountCodeController::class, 'getActiveCodes'])->name('discount-codes.active');
     });
 });

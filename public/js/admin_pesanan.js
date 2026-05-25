@@ -3,15 +3,13 @@
 let orderItems = {};
 const PAJAK_PERSEN = 0.01;
 
-// ===== KODE DISKON STATIS =====
-const DISCOUNT_CODES = {
-    'DISKON10':  { type: 'percent', value: 10,    label: 'Diskon 10%' },
-    'DISKON20':  { type: 'percent', value: 20,    label: 'Diskon 20%' },
-    'PROMO50':   { type: 'percent', value: 50,    label: 'Diskon 50%' },
-    'HEMAT10K':  { type: 'fixed',   value: 10000, label: 'Potongan Rp10.000' },
-    'HEMAT25K':  { type: 'fixed',   value: 25000, label: 'Potongan Rp25.000' },
-    'HEMAT50K':  { type: 'fixed',   value: 50000, label: 'Potongan Rp50.000' },
-};
+// ===== KODE DISKON DARI DATABASE =====
+let DISCOUNT_CODES = {};
+
+fetch('/admin/discount-codes/active')
+    .then(res => res.json())
+    .then(data => { DISCOUNT_CODES = data; })
+    .catch(err => console.error('Failed to load discount codes:', err));
 
 let appliedDiscount = null;   // { type, value, label, code }
 let currentSubtotal = 0;      // subtotal terakhir (sebelum pajak/diskon)
@@ -211,6 +209,11 @@ function updatePayment(subtotal) {
     document.getElementById('pajak').textContent       = 'Rp' + formatRp(pajak);
     document.getElementById('diskon').textContent      = diskon > 0 ? '- Rp' + formatRp(diskon) : 'Rp0';
     document.getElementById('total-bayar').textContent = 'Rp' + formatRp(total);
+
+    const diskonLabel = document.getElementById('diskon-label');
+    if (diskonLabel) {
+        diskonLabel.textContent = appliedDiscount ? `Diskon (${appliedDiscount.code})` : 'Diskon';
+    }
 
     // Update kembalian jika metode tunai aktif
     updateKembalian();
@@ -443,6 +446,7 @@ function tambahkanPesanan() {
     // Format data untuk backend
     const payload = {
         payment_method: selectedPayment,
+        discount_code: appliedDiscount ? appliedDiscount.code : null,
         items: items.map(i => ({
             product_id: i.id,
             size: i.ukuran,
@@ -467,7 +471,11 @@ function tambahkanPesanan() {
         return data;
     })
     .then(data => {
-        if (data.is_cash) {
+        if (data.is_free) {
+            showToast('Pesanan GRATIS berhasil dibuat! (Diskon 100%)', 'success');
+            showReceipt(data.order_id);
+            resetAllOrderState();
+        } else if (data.is_cash) {
             showToast('Pesanan berhasil dibuat! (Tunai)', 'success');
             showReceipt(data.order_id);
             resetAllOrderState();
@@ -667,6 +675,8 @@ function showReceipt(orderId) {
 
     const diskonRow = document.getElementById('receipt-diskon-row');
     if (diskon > 0) {
+        const diskonLabel = appliedDiscount ? `Diskon (${appliedDiscount.code})` : 'Diskon';
+        diskonRow.querySelector('span:first-child').textContent = diskonLabel;
         document.getElementById('receipt-diskon').textContent = '-Rp' + diskon.toLocaleString('id-ID');
         diskonRow.classList.remove('hidden');
     } else {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use App\Models\Product;
+use App\Models\DiscountCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -33,6 +34,7 @@ class TransactionController extends Controller
     {
         $request->validate([
             'payment_method'     => 'nullable|string',
+            'discount_code'      => 'nullable|string|max:50',
             'items'              => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,product_id',
             'items.*.size'       => 'nullable|string|max:50',
@@ -97,15 +99,45 @@ class TransactionController extends Controller
 
             $transaction->update(['total_price' => $totalPrice]);
 
+            // ===== HITUNG DISKON =====
+            $discountCode   = strtoupper(trim($request->input('discount_code', '')));
+            $discountAmount = 0;
+            $subtotalAsli   = $totalPrice;
+
+            if ($discountCode) {
+                $disc = DiscountCode::where('code', $discountCode)->where('is_active', true)->first();
+
+                if ($disc) {
+                    if ($disc->type === 'percent') {
+                        $discountAmount = (int) round($subtotalAsli * $disc->value / 100);
+                    } else {
+                        $discountAmount = $disc->value;
+                    }
+                    $discountAmount = min($discountAmount, $subtotalAsli);
+                }
+            }
+
+            // ===== HITUNG PAJAK & TOTAL AKHIR =====
+            $pajak = (int) round($subtotalAsli * 0.01);
+            $totalAkhir = max(0, $subtotalAsli + $pajak - $discountAmount);
+
+            // Update transaction dengan total akhir
+            $transaction->update([
+                'total_price'     => $totalAkhir,
+                'discount_code'   => $discountCode ?: null,
+                'discount_amount' => $discountAmount,
+            ]);
+
             // ===== MIDTRANS SNAP TOKEN =====
             $snapToken = null;
             $paymentMethod = $request->input('payment_method', 'cod');
 
-            // Hanya generate snap token jika metode pembayaran bukan COD/Tunai
-            if ($paymentMethod !== 'cod') {
-                $pajak = (int) round($totalPrice * 0.01);
-                $grossAmount = $totalPrice + $pajak;
-
+            // Jika total 0 (diskon 100%), langsung paid tanpa payment gateway
+            if ($totalAkhir <= 0) {
+                $transaction->update(['payment_status' => 'paid']);
+                $this->decrementStock($transaction);
+            } elseif ($paymentMethod !== 'cod') {
+                // Tambahkan pajak & diskon ke item details untuk Midtrans
                 $itemDetails[] = [
                     'id'       => 'TAX-1',
                     'price'    => $pajak,
@@ -113,7 +145,16 @@ class TransactionController extends Controller
                     'name'     => 'Pajak (1%)',
                 ];
 
-                $snapToken = $this->generateSnapToken($transaction, $itemDetails, $grossAmount, $paymentMethod);
+                if ($discountAmount > 0) {
+                    $itemDetails[] = [
+                        'id'       => 'DISC-1',
+                        'price'    => -$discountAmount,
+                        'quantity' => 1,
+                        'name'     => 'Diskon (' . $discountCode . ')',
+                    ];
+                }
+
+                $snapToken = $this->generateSnapToken($transaction, $itemDetails, $totalAkhir, $paymentMethod);
                 $transaction->update(['snap_token' => $snapToken]);
             } else {
                 // Pembayaran tunai langsung paid — potong stok sekarang
@@ -125,16 +166,19 @@ class TransactionController extends Controller
 
             if ($request->ajax() || $request->wantsJson()) {
                 return response()->json([
-                    'success'    => true,
-                    'message'    => 'Transaksi berhasil disimpan. Total: Rp ' . number_format($totalPrice, 0, ',', '.'),
-                    'snap_token' => $snapToken,
-                    'order_id'   => $orderId,
-                    'is_cash'    => $paymentMethod === 'cod',
+                    'success'         => true,
+                    'message'         => 'Transaksi berhasil disimpan. Total: Rp ' . number_format($totalAkhir, 0, ',', '.'),
+                    'snap_token'      => $snapToken,
+                    'order_id'        => $orderId,
+                    'is_cash'         => $paymentMethod === 'cod',
+                    'is_free'         => $totalAkhir <= 0,
+                    'discount_code'   => $discountCode ?: null,
+                    'discount_amount' => $discountAmount,
                 ]);
             }
 
             return redirect()->route('admin.pesanan')
-                ->with('success', 'Transaksi berhasil disimpan. Total: Rp ' . number_format($totalPrice, 0, ',', '.'));
+                ->with('success', 'Transaksi berhasil disimpan. Total: Rp ' . number_format($totalAkhir, 0, ',', '.'));
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -265,6 +309,73 @@ class TransactionController extends Controller
         ]);
     }
 
+    public function regenerateSnapToken(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|string',
+        ]);
+
+        $transaction = Transaction::with('transactionDetails.product')
+            ->where('order_id', $request->order_id)
+            ->where('payment_status', 'pending')
+            ->first();
+
+        if (!$transaction) {
+            return response()->json(['success' => false, 'error' => 'Transaksi tidak ditemukan atau sudah dibayar'], 404);
+        }
+
+        $itemDetails = [];
+        $subtotal = 0;
+
+        foreach ($transaction->transactionDetails as $detail) {
+            $productName = $detail->product ? $detail->product->name : 'Produk';
+            $itemName = $detail->size ? "{$productName} ({$detail->size})" : $productName;
+
+            $itemDetails[] = [
+                'id'       => (string) $detail->product_id,
+                'price'    => (int) $detail->price,
+                'quantity' => $detail->quantity,
+                'name'     => substr($itemName, 0, 50),
+            ];
+
+            $subtotal += $detail->price * $detail->quantity;
+        }
+
+        $pajak = (int) round($subtotal * 0.01);
+        $discountAmount = (int) ($transaction->discount_amount ?? 0);
+        $grossAmount = max(0, $subtotal + $pajak - $discountAmount);
+
+        $itemDetails[] = [
+            'id'       => 'TAX-1',
+            'price'    => $pajak,
+            'quantity' => 1,
+            'name'     => 'Pajak (1%)',
+        ];
+
+        if ($discountAmount > 0) {
+            $itemDetails[] = [
+                'id'       => 'DISC-1',
+                'price'    => -$discountAmount,
+                'quantity' => 1,
+                'name'     => 'Diskon (' . ($transaction->discount_code ?? '') . ')',
+            ];
+        }
+
+        try {
+            $paymentMethod = $transaction->payment_method ?? '';
+            $snapToken = $this->generateSnapToken($transaction, $itemDetails, $grossAmount, $paymentMethod);
+            $transaction->update(['snap_token' => $snapToken]);
+
+            return response()->json([
+                'success'    => true,
+                'snap_token' => $snapToken,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Regenerate Snap Token Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Gagal membuat token baru: ' . $e->getMessage()], 500);
+        }
+    }
+
     // getTransaksi() : Transaction (detail satu transaksi)
     public function show(Transaction $transaction)
     {
@@ -292,14 +403,18 @@ class TransactionController extends Controller
                     return [
                         'nama'   => $detail->product ? $detail->product->name : 'Produk Terhapus',
                         'ukuran' => $detail->size ?? 'All Size',
-                        'qty'    => $detail->quantity
+                        'qty'    => $detail->quantity,
+                        'price'  => $detail->price,
                     ];
                 })->toArray(),
-                'total'      => $tr->total_price,
-                'metode'     => self::formatPaymentMethod($tr->payment_method),
-                'status'     => $tr->payment_status ?? 'paid',
-                'snap_token' => $tr->snap_token,
-                'order_id'   => $tr->order_id,
+                'total'           => $tr->total_price,
+                'metode'          => self::formatPaymentMethod($tr->payment_method),
+                'status'          => $tr->payment_status ?? 'paid',
+                'snap_token'      => $tr->snap_token,
+                'order_id'        => $tr->order_id,
+                'discount_code'   => $tr->discount_code,
+                'discount_amount' => $tr->discount_amount ?? 0,
+                'kasir'           => $tr->user->name ?? 'Kasir',
             ];
         });
 

@@ -57,6 +57,12 @@ function renderTable() {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
                         </button>
+                        <button onclick="printStruk(${start + i})" title="Cetak Struk"
+                                class="w-7 h-7 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-emerald-500 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                            </svg>
+                        </button>
                         <button onclick="editRow(${start + i})" title="Edit"
                                 class="w-7 h-7 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-blue-500 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,22 +305,55 @@ function openPayment(snapToken, orderId) {
         return;
     }
 
-    window.snap.pay(snapToken, {
-        onSuccess: function(result) {
-            showToast('Pembayaran berhasil!', 'success');
-            updatePaymentStatus(orderId, 'paid');
+    try {
+        window.snap.pay(snapToken, {
+            onSuccess: function(result) {
+                showToast('Pembayaran berhasil!', 'success');
+                updatePaymentStatus(orderId, 'paid');
+            },
+            onPending: function(result) {
+                showToast('Menunggu pembayaran...', 'success');
+            },
+            onError: function(result) {
+                if (result && result.status_code === '407') {
+                    regenerateAndPay(orderId);
+                } else {
+                    showToast('Pembayaran gagal!', 'error');
+                    updatePaymentStatus(orderId, 'failed');
+                }
+            },
+            onClose: function() {}
+        });
+    } catch (e) {
+        regenerateAndPay(orderId);
+    }
+}
+
+function regenerateAndPay(orderId) {
+    showToast('Token expired, memperbarui...', 'error');
+
+    fetch('/admin/transaksi/regenerate-token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
         },
-        onPending: function(result) {
-            showToast('Menunggu pembayaran...', 'success');
-        },
-        onError: function(result) {
-            showToast('Pembayaran gagal!', 'error');
-            updatePaymentStatus(orderId, 'failed');
-        },
-        onClose: function() {
-            // User menutup popup tanpa menyelesaikan pembayaran
+        body: JSON.stringify({ order_id: orderId }),
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success && data.snap_token) {
+            const item = allData.find(r => r.order_id === orderId);
+            if (item) item.snap_token = data.snap_token;
+            const filtered = filteredData.find(r => r.order_id === orderId);
+            if (filtered) filtered.snap_token = data.snap_token;
+
+            setTimeout(() => openPayment(data.snap_token, orderId), 500);
+        } else {
+            showToast(data.error || 'Gagal memperbarui token pembayaran', 'error');
         }
-    });
+    })
+    .catch(() => showToast('Gagal menghubungi server', 'error'));
 }
 
 function updatePaymentStatus(orderId, status) {
@@ -753,3 +792,82 @@ function applyExtraFilters(data) {
 // ===== INIT =====
 renderTable();
 updateReportingStats();
+
+function printStruk(index) {
+    const row = filteredData[index];
+    if (!row) return;
+
+    const orderId = row.order_id || row.id;
+    const subtotal = Array.isArray(row.produk)
+        ? row.produk.reduce((sum, p) => sum + (p.price || 0) * p.qty, 0)
+        : Number(row.total);
+    const diskon = Number(row.discount_amount) || 0;
+    const pajak = Math.round(subtotal * 0.01);
+    const total = Number(row.total);
+
+    const itemsHTML = Array.isArray(row.produk)
+        ? row.produk.map(p => `
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                <span>${p.nama} (${p.ukuran}) x${p.qty}</span>
+                <span>Rp${((p.price || 0) * p.qty).toLocaleString('id-ID')}</span>
+            </div>`).join('')
+        : `<div style="font-size:12px;">${row.produk}</div>`;
+
+    const diskonHTML = diskon > 0
+        ? `<div style="display:flex;justify-content:space-between;font-size:12px;color:#666;">
+               <span>Diskon${row.discount_code ? ' (' + row.discount_code + ')' : ''}</span>
+               <span>-Rp${diskon.toLocaleString('id-ID')}</span>
+           </div>`
+        : '';
+
+    const strukHTML = `
+        <div style="font-family:'Jost',sans-serif;width:280px;padding:24px;margin:0 auto;">
+            <div style="text-align:center;margin-bottom:16px;">
+                <p style="font-size:14px;font-weight:bold;margin:0;">House of Saraswati</p>
+                <p style="font-size:11px;color:#888;margin:4px 0 0;">Hijab & Gamis Collection</p>
+                <p style="font-size:11px;color:#aaa;margin:4px 0 0;">${row.tanggal}</p>
+            </div>
+            <hr style="border:none;border-top:1px dashed #ccc;margin:12px 0;">
+            <p style="font-size:11px;color:#666;margin:0 0 4px;">Order ID: <strong>${orderId}</strong></p>
+            <p style="font-size:11px;color:#666;margin:0 0 12px;">Kasir: <strong>${row.kasir || 'Kasir'}</strong></p>
+            <hr style="border:none;border-top:1px dashed #ccc;margin:12px 0;">
+            ${itemsHTML}
+            <hr style="border:none;border-top:1px dashed #ccc;margin:12px 0;">
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;">
+                <span>Subtotal</span><span>Rp${subtotal.toLocaleString('id-ID')}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:12px;color:#666;">
+                <span>Pajak (1%)</span><span>Rp${pajak.toLocaleString('id-ID')}</span>
+            </div>
+            ${diskonHTML}
+            <hr style="border:none;border-top:1px solid #eee;margin:8px 0;">
+            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:bold;">
+                <span>Total</span><span>Rp${total.toLocaleString('id-ID')}</span>
+            </div>
+            <hr style="border:none;border-top:1px dashed #ccc;margin:12px 0;">
+            <div style="text-align:center;">
+                <p style="font-size:11px;color:#666;margin:0;">Metode: <strong>${row.metode}</strong></p>
+                <p style="font-size:11px;color:#aaa;margin:8px 0 0;">Terima kasih atas pembelian Anda!</p>
+            </div>
+        </div>`;
+
+    const printWindow = window.open('', '_blank', 'width=320,height=600');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Struk-${orderId}</title>
+            <style>
+                body { margin: 0; padding: 0; }
+                @media print { body { margin: 0; } }
+            </style>
+        </head>
+        <body>${strukHTML}</body>
+        </html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 300);
+}

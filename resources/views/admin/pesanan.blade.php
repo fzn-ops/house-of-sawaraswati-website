@@ -138,7 +138,7 @@
                         <span>Pajak</span><span id="pajak">Rp0</span>
                     </div>
                     <div class="flex justify-between text-gray-500 dark:text-gray-400">
-                        <span>Diskon</span><span id="diskon">Rp0</span>
+                        <span id="diskon-label">Diskon</span><span id="diskon">Rp0</span>
                     </div>
                     <hr class="border-gray-100 dark:border-gray-800 my-2">
                     <div class="flex justify-between font-semibold text-charcoal dark:text-gray-100">

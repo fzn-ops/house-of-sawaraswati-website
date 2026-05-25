@@ -16,7 +16,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'transaction_date', 'total_price', 'user_id', 'payment_method',
-        'order_id', 'snap_token', 'payment_status'
+        'order_id', 'snap_token', 'payment_status', 'discount_code', 'discount_amount'
     ];
 
     public function user()
